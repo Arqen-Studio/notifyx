@@ -4,15 +4,16 @@ import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Bell, Clock, FileText, Plus } from "lucide-react";
 import Button from "@/components/button";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
-// ================= TYPES =================
 export type TaskStatus = "Active" | "Completed";
 
 export interface Task {
   id: string;
   name: string;
   client: string;
-  deadline: string; // ISO date from backend
+  deadline: string;
   tags: string[];
   status: TaskStatus;
 }
@@ -23,9 +24,7 @@ export interface DashboardStats {
   remindersSentToday: number;
 }
 
-// ================= API (mock for now) =================
 async function fetchDashboardStats(): Promise<DashboardStats> {
-  // later: fetch('/api/dashboard/stats')
   return {
     upcomingCount: 5,
     activeCount: 24,
@@ -34,7 +33,6 @@ async function fetchDashboardStats(): Promise<DashboardStats> {
 }
 
 async function fetchRecentTasks(): Promise<Task[]> {
-  // later: fetch('/api/tasks?limit=6')
   return [
     {
       id: "1",
@@ -63,11 +61,11 @@ async function fetchRecentTasks(): Promise<Task[]> {
   ];
 }
 
-// ================= COMPONENT =================
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     async function loadDashboard() {
@@ -90,8 +88,8 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white border-r p-6 flex flex-col justify-between">
+      {/* Sidebar (hidden on mobile) */}
+      <aside className="hidden md:flex w-64 bg-white border-r p-6 flex-col justify-between">
         <div>
           <h1 className="text-xl font-semibold mb-8">DeadlineGuard</h1>
           <nav className="space-y-3 text-sm">
@@ -101,28 +99,49 @@ export default function DashboardPage() {
             <p className="text-slate-500">Archive</p>
           </nav>
         </div>
-        <div className="text-sm text-slate-500">John Consultant<br/>john@consulting.com</div>
+        <div className="text-sm text-slate-500">
+          John Consultant
+          <br />
+          john@consulting.com
+        </div>
       </aside>
 
       {/* Main */}
-      <main className="flex-1 p-8">
+      <main className="flex-1 p-4 sm:p-6 md:p-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <h2 className="text-2xl font-semibold">Dashboard</h2>
-          <Button className="flex items-center gap-2"><Plus size={16}/>Create Task</Button>
+          <Button
+            className="flex items-center gap-2 w-full sm:w-auto"
+            onClick={() => router.push("/tasks/create")}
+          >
+            <Plus size={16} />
+            Create Task
+          </Button>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          <StatCard label="Upcoming in 7 Days" value={`${stats.upcomingCount} Tasks`} icon={<Clock className="text-red-400" />} />
-          <StatCard label="Active Obligations" value={`${stats.activeCount} Tasks`} icon={<FileText className="text-blue-500" />} />
-          <StatCard label="Reminders Sent Today" value={`${stats.remindersSentToday} Emails`} icon={<Bell className="text-green-500" />} />
+          <StatCard
+            label="Upcoming in 7 Days"
+            value={`${stats.upcomingCount} Tasks`}
+            icon={<Clock className="text-red-400" />}
+          />
+          <StatCard
+            label="Active Obligations"
+            value={`${stats.activeCount} Tasks`}
+            icon={<FileText className="text-blue-500" />}
+          />
+          <StatCard
+            label="Reminders Sent Today"
+            value={`${stats.remindersSentToday} Emails`}
+            icon={<Bell className="text-green-500" />}
+          />
         </div>
 
-        {/* Tasks Table */}
         <Card>
-          <CardContent className="p-0">
-            <table className="w-full text-sm">
+          <CardContent className="p-0 overflow-x-auto">
+            <table className="min-w-[700px] w-full text-sm">
               <thead className="bg-slate-100 text-left">
                 <tr>
                   <th className="p-4">Task</th>
@@ -132,12 +151,22 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {tasks.map(task => (
+                {tasks.map((task) => (
                   <tr key={task.id} className="border-t">
-                    <td className="p-4 font-medium">{task.name} – {task.client}</td>
-                    <td className="p-4">{new Date(task.deadline).toLocaleDateString()}</td>
+                    <td className="p-4 font-medium">
+                      {task.name} – {task.client}
+                    </td>
+                    <td className="p-4">
+                      {new Date(task.deadline).toLocaleDateString()}
+                    </td>
                     <td className="p-4">{task.tags.join(" · ")}</td>
-                    <td className={`p-4 ${task.status === "Active" ? "text-green-600" : "text-slate-500"}`}>
+                    <td
+                      className={`p-4 ${
+                        task.status === "Active"
+                          ? "text-green-600"
+                          : "text-slate-500"
+                      }`}
+                    >
                       {task.status}
                     </td>
                   </tr>
@@ -152,7 +181,15 @@ export default function DashboardPage() {
 }
 
 // ================= REUSABLE =================
-function StatCard({ label, value, icon }: { label: string; value: string; icon: React.ReactNode }) {
+function StatCard({
+  label,
+  value,
+  icon,
+}: {
+  label: string;
+  value: string;
+  icon: React.ReactNode;
+}) {
   return (
     <Card>
       <CardContent className="p-6 flex justify-between items-center">

@@ -11,7 +11,7 @@ export default function HomePage() {
       {/* <div className="absolute inset- bg-[#982598] rounded-r-[70%] clip-wave-left"></div> */}
       <div className="absolute inset-0 flex flex-col items-center justify-center px-8 text-background">
         <h1 className="font-bricolage text-black text-5xl font-bold mb-4 text-center">
-          Welcome to Reminder App
+          Welcome to Notifyx
         </h1>
         <p className="text-lg text-background/80 text-center">
           Schedule your reminders easily and never miss anything!
