@@ -1,0 +1,7 @@
+# Ignore parent directories to prevent path resolution issues
+../node_modules
+../../node_modules
+../../../node_modules
+../package*.json
+../../package*.json
+../../../package*.json

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,8 +9,8 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Plus } from "lucide-react";
 import Button from "@/components/button";
+import { ApiError, ApiResponse, CreateTaskRequest, CreateTaskResponse } from "@/types/api";
 
-// ================= TYPES =================
 export type TaskStatus = "Active" | "Completed";
 
 interface ReminderRule {
@@ -29,8 +30,11 @@ interface CreateTaskPayload {
   reminders: ReminderRule[];
 }
 
-// ================= COMPONENT =================
 export default function CreateTaskPage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
   const [form, setForm] = useState<CreateTaskPayload>({
     title: "",
     clientId: null,
@@ -62,9 +66,100 @@ export default function CreateTaskPage() {
     }));
   }
 
-  async function handleSubmit() {
-    // later: POST /api/tasks
-    console.log("Create Task Payload", form);
+  async function handleSubmit(e?: React.FormEvent) {
+    if (e) {
+      e.preventDefault();
+    }
+    
+    setError(null);
+    setLoading(true);
+
+    try {
+      if (!form.title.trim()) {
+        setError("Task title is required");
+        setLoading(false);
+        return;
+      }
+
+      if (!form.deadlineDate) {
+        setError("Deadline date is required");
+        setLoading(false);
+        return;
+      }
+
+      const requestBody: CreateTaskRequest = {
+        title: form.title,
+        deadlineDate: form.deadlineDate,
+        deadlineTime: form.deadlineTime || undefined,
+        description: form.description || undefined,
+        status: form.status,
+        tags: form.tags,
+        reminders: form.reminders,
+        clientId: form.clientId || undefined,
+      };
+
+      console.log("Creating task:", requestBody);
+
+      const response = await fetch("/api/v1/tasks", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      console.log("Task creation response status:", response.status);
+
+      if (!response.ok) {
+        let errorMessage = "An error occurred while creating the task.";
+        
+        try {
+          const text = await response.text();
+          console.log("Raw error response text:", text);
+          
+          if (text && text.trim().length > 0) {
+            try {
+              const errorData = JSON.parse(text) as ApiError;
+              console.error("Task creation error response:", errorData);
+              
+              if (errorData?.error?.message) {
+                errorMessage = errorData.error.message;
+              }
+              
+              if (errorData?.error?.details && typeof errorData.error.details === "object") {
+                const details = errorData.error.details;
+                const firstError = Object.values(details)[0];
+                if (typeof firstError === "string") {
+                  errorMessage = firstError;
+                }
+              }
+            } catch (jsonParseError) {
+              console.error("Failed to parse JSON from error response:", jsonParseError);
+              if (text.length < 200) {
+                errorMessage = text;
+              }
+            }
+          }
+        } catch (readError) {
+          console.error("Failed to read error response:", readError);
+          errorMessage = `Error ${response.status}: ${response.statusText || "Network error"}`;
+        }
+        
+        setError(errorMessage);
+        setLoading(false);
+        return;
+      }
+
+      const data = await response.json();
+      console.log("Task created successfully:", data);
+      const successData = data as ApiResponse<CreateTaskResponse>;
+      
+      router.push("/dashboard");
+    } catch (err) {
+      console.error("Task creation error:", err);
+      setError(err instanceof Error ? err.message : "An error occurred. Please try again.");
+      setLoading(false);
+    }
   }
 
   return (
@@ -88,21 +183,30 @@ export default function CreateTaskPage() {
       </aside>
 
       {/* Main */}
-      <main className="flex-1 p-6 md:p-10">
-        <div className="max-w-3xl mx-auto">
+      <main className="flex-1">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 py-6 md:py-10">
+          <div className="max-w-3xl mx-auto">
           <h2 className="text-2xl font-semibold mb-6">Create New Task</h2>
 
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+              {error}
+            </div>
+          )}
+
           <Card>
-            <CardContent className="p-6 space-y-6">
-              {/* Title */}
-              <div className="space-y-2">
-                <Label>Task Title *</Label>
-                <Input
-                  placeholder="e.g., Q3 Financial Audit"
-                  value={form.title}
-                  onChange={(e) => updateField("title", e.target.value)}
-                />
-              </div>
+            <form onSubmit={handleSubmit}>
+              <CardContent className="p-6 space-y-6">
+                {/* Title */}
+                <div className="space-y-2">
+                  <Label>Task Title *</Label>
+                  <Input
+                    placeholder="e.g., Q3 Financial Audit"
+                    value={form.title}
+                    onChange={(e) => updateField("title", e.target.value)}
+                    required
+                  />
+                </div>
 
               {/* Client */}
               <div className="space-y-2">
@@ -215,11 +319,24 @@ export default function CreateTaskPage() {
 
               {/* Actions */}
               <div className="flex justify-between pt-4">
-                <Button variant="ghost">Cancel</Button>
-                <Button onClick={handleSubmit}>Save Task</Button>
+                <Button 
+                  variant="ghost" 
+                  onClick={() => router.back()}
+                  disabled={loading}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit"
+                  disabled={loading}
+                >
+                  {loading ? "Creating..." : "Save Task"}
+                </Button>
               </div>
-            </CardContent>
+              </CardContent>
+            </form>
           </Card>
+          </div>
         </div>
       </main>
     </div>

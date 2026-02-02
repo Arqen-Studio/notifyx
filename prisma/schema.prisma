@@ -1,0 +1,129 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String   @id @default(uuid())
+  email            String   @unique
+  password         String?  // Nullable for OAuth users
+  name             String?
+  surname          String?
+  mobile           String?
+  timezone         String   @default("UTC")
+  enabled_intervals String[] @default(["P3M", "P1M", "P3W", "P2W", "P1W", "P3D", "P1D"])
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  // Relations
+  tasks            Task[]
+  tags             Tag[]
+  reminder_rules   ReminderRule[]
+  reminders        Reminder[]
+
+  @@index([email])
+}
+
+model Task {
+  id              String   @id @default(uuid())
+  user_id         String
+  title           String
+  notes           String?
+  deadline_at     DateTime
+  status          String   @default("active") // active, completed, archived, deleted
+  deleted_at      DateTime?
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  // Relations
+  user            User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  tags            TaskTag[]
+  reminder_rules ReminderRule[]
+  reminders      Reminder[]
+
+  @@index([user_id, deadline_at])
+  @@index([user_id, status])
+}
+
+model Tag {
+  id         String   @id @default(uuid())
+  user_id   String
+  name       String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relations
+  user      User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  tasks     TaskTag[]
+
+  @@unique([user_id, name])
+}
+
+model TaskTag {
+  task_id String
+  tag_id  String
+
+  task    Task @relation(fields: [task_id], references: [id], onDelete: Cascade)
+  tag     Tag  @relation(fields: [tag_id], references: [id], onDelete: Cascade)
+
+  @@id([task_id, tag_id])
+}
+
+model ReminderRule {
+  id             String   @id @default(uuid())
+  user_id        String
+  task_id        String
+  label          String?
+  offset_seconds Int
+  enabled        Boolean  @default(true)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  // Relations
+  user           User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  task           Task     @relation(fields: [task_id], references: [id], onDelete: Cascade)
+  reminders      Reminder[]
+
+  @@index([task_id, enabled])
+}
+
+model Reminder {
+  id                 String   @id @default(uuid())
+  user_id            String
+  task_id            String
+
+  // Standard schedule fields
+  interval_key       String?  // P3M, P1M, P3W, P2W, P1W, P3D, P1D
+
+  // Custom schedule fields
+  rule_id            String?
+  offset_seconds     Int?
+
+  source             String   // standard, custom
+  scheduled_for       DateTime
+
+  status             String   @default("pending") // pending, processing, sent, canceled, failed
+  sent_at            DateTime?
+  canceled_at        DateTime?
+  provider_message_id String?
+  error              String?
+  attempts           Int      @default(0)
+  last_attempt_at    DateTime?
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  // Relations
+  user               User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  task               Task     @relation(fields: [task_id], references: [id], onDelete: Cascade)
+  rule               ReminderRule? @relation(fields: [rule_id], references: [id], onDelete: SetNull)
+
+  @@unique([task_id, scheduled_for])
+  @@index([status, scheduled_for])
+}

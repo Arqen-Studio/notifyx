@@ -3,14 +3,11 @@ import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import clsx from "clsx";
 
-// Utility to combine class names
-export const cn = (...classes: (string | undefined | false)[]) => {
-  return clsx(...classes);
-};
+export const cn = (...classes: (string | undefined | false)[]) =>
+  clsx(...classes);
 
-// Define button variants and sizes
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer",
   {
     variants: {
       variant: {
@@ -35,22 +32,20 @@ const buttonVariants = cva(
   },
 );
 
-// Button props including variants and asChild
 export interface ButtonProps
   extends
     React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
-  asChild?: boolean; // Allows wrapping in another element
+  asChild?: boolean;
 }
 
-// ForwardRef component
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
     return (
       <Comp
         ref={ref}
-        className={cn(buttonVariants({ variant, size, className }))}
+        className={cn(buttonVariants({ variant, size }), className)}
         {...props}
       />
     );
@@ -60,6 +55,4 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 Button.displayName = "Button";
 
 export { Button, buttonVariants };
-
-// Default export for backward compatibility
 export default Button;

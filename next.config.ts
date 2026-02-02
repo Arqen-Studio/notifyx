@@ -1,11 +1,15 @@
 import type { NextConfig } from "next";
+import path from "path";
+
+const projectRoot = path.resolve(process.cwd());
 
 const nextConfig: NextConfig = {
-  // Optimize performance
   compress: true,
   poweredByHeader: false,
-  // Ensure Fast Refresh works properly
   reactStrictMode: true,
+  turbopack: {
+    root: projectRoot,
+  },
 };
 
 export default nextConfig;

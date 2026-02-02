@@ -1,6 +1,8 @@
 import { ReactNode } from "react";
 import { Bricolage_Grotesque, Archivo } from "next/font/google";
 import "./globals.css";
+import Navbar from "@/components/navbar";
+import { Providers } from "@/components/providers";
 
 const bricolage = Bricolage_Grotesque({
   subsets: ["latin"],
@@ -27,7 +29,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         className={`${archivo.className} ${bricolage.variable} bg-white dark:bg-black text-gray-800 dark:text-gray-200`}
         suppressHydrationWarning
       >
-        {children}
+        <Providers>
+          <Navbar />
+          {children}
+        </Providers>
       </body>
     </html>
   );

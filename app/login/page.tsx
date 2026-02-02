@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Eye, EyeClosed } from "lucide-react";
 import {
   Card,
@@ -12,44 +12,81 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/button";
 import Link from "next/link";
+import { signIn, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [form, setForm] = useState({
     email: "",
     password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (status === "authenticated" && session) {
+      router.push("/dashboard");
+    }
+  }, [status, session, router]);
+
+  if (status === "loading") {
+    return (
+      <div className="flex items-center justify-center bg-[#FFFFFF] py-10 min-h-screen">
+        <div className="text-slate-500">Loading...</div>
+      </div>
+    );
+  }
+
+  if (status === "authenticated") {
+    return null;
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+    setError(null);
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.email || !form.password) {
-      alert("Please fill in all required fields");
-      return;
+    setError(null);
+    setLoading(true);
+
+    try {
+      const result = await signIn("credentials", {
+        email: form.email,
+        password: form.password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setError("Invalid email or password");
+        setLoading(false);
+        return;
+      }
+
+      if (result?.ok) {
+        router.push("/dashboard");
+        router.refresh();
+      }
+    } catch (err) {
+      setError("An error occurred. Please try again.");
+      setLoading(false);
     }
+  };
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(form.email)) {
-      alert("Please enter a valid email address");
-      return;
-    }
-
-    console.log("Form data:", form);
-    alert(`Login successful!\n\nEmail: ${form.email}`);
-
-    setForm({
-      email: "",
-      password: "",
-    });
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    await signIn("google", { callbackUrl: "/dashboard" });
   };
 
   return (
     <div className="flex items-center justify-center bg-[#FFFFFF] py-10 min-h-screen">
-      <Card className="w-full md:max-w-[500px] rounded-[26px] border border-[#E7E7E7] p-6 flex-col items-center justify-center">
+      <div className="w-full max-w-7xl mx-auto px-4 md:px-8">
+        <Card className="w-full md:max-w-[500px] mx-auto rounded-[26px] border border-[#E7E7E7] p-6 flex-col items-center justify-center">
         <CardHeader className="text-center mb-3">
           <CardTitle className="sub-heading">Login</CardTitle>
         </CardHeader>
@@ -94,11 +131,17 @@ export default function LoginPage() {
           </CardContent>
 
           <CardFooter className="flex flex-col items-center space-y-4 mt-2">
+            {error && (
+              <div className="w-full text-center text-red-600 text-sm">
+                {error}
+              </div>
+            )}
             <Button
               type="submit"
-              className="w-full md:w-auto px-20 h-[50px] font-bricolage font-extrabold rounded-full text-[#FFFFFF] text-[20px] custom-box-shadow hover:opacity-90"
+              disabled={loading}
+              className="w-full md:w-auto px-20 h-[50px] font-bricolage font-extrabold rounded-full text-[#FFFFFF] text-[20px] custom-box-shadow hover:opacity-90 bg-[#4f064f] hover:bg-[#3d053d] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Login
+              {loading ? "Logging in..." : "Login"}
             </Button>
 
             <div className="flex items-center gap-3 text-[#9D9E98] w-full md:w-auto">
@@ -109,7 +152,9 @@ export default function LoginPage() {
 
             <Button
               type="button"
-              className="w-full px-10 h-[60px] rounded-full bg-[#F6F6F3] border-[#E6E6E1] text-[25px] text-[#5F6057] flex items-center justify-center gap-2"
+              onClick={handleGoogleLogin}
+              disabled={loading}
+              className="w-full px-10 h-[60px] rounded-full bg-[#F6F6F3] border-[#E6E6E1] text-[25px] text-[#5F6057] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <img
                 src="/svg/google-icon-logo.svg"
@@ -122,7 +167,7 @@ export default function LoginPage() {
               New user?{" "}
               <Link
                 href="/signup"
-                className="text-[18px] leading-[25px] italic hover:text-blue-500 font-medium underline"
+                className="text-[18px] leading-[25px] italic hover:text-[#4f064f] font-medium underline"
               >
                 Sign up
               </Link>
@@ -130,6 +175,7 @@ export default function LoginPage() {
           </CardFooter>
         </form>
       </Card>
+      </div>
     </div>
   );
 }
