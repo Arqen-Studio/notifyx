@@ -13,7 +13,7 @@ import {
   Inbox,
 } from "lucide-react";
 import Button from "@/components/button";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ApiResponse, GetTasksResponse, TaskResponse, ApiError } from "@/types/api";
 
 export type TaskStatus = "Active" | "Completed";
@@ -81,6 +81,7 @@ export default function DashboardPage() {
     sortOrder: "asc",
   });
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const loadDashboard = async () => {
     setLoading(true);
@@ -114,6 +115,13 @@ export default function DashboardPage() {
   }, [filters]);
 
   useEffect(() => {
+    if (searchParams.get("refresh") === "true") {
+      loadDashboard();
+      router.replace("/dashboard", { scroll: false });
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
     const handleFocus = () => {
       loadDashboard();
     };
@@ -121,7 +129,24 @@ export default function DashboardPage() {
     return () => window.removeEventListener("focus", handleFocus);
   }, [filters]);
 
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        loadDashboard();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [filters]);
+
   const handleDeleteTask = async (taskId: string) => {
+    const task = tasks.find((t) => t.id === taskId);
+    const taskTitle = task?.title || "this task";
+    
+    if (!confirm(`Are you sure you want to delete "${taskTitle}"?\n\nThis will cancel all future reminders. This action cannot be undone.`)) {
+      return;
+    }
+
     setDeleting(taskId);
     try {
       const response = await fetch(`/api/v1/tasks/${taskId}`, {
@@ -129,13 +154,14 @@ export default function DashboardPage() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to delete task");
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData?.error?.message || "Failed to delete task");
       }
 
       await loadDashboard();
     } catch (error) {
       console.error("Error deleting task:", error);
-      alert("Failed to delete task. Please try again.");
+      alert(error instanceof Error ? error.message : "Failed to delete task. Please try again.");
     } finally {
       setDeleting(null);
     }
@@ -319,6 +345,7 @@ export default function DashboardPage() {
                         <TaskActionMenu 
                           taskId={task.id} 
                           onDelete={() => handleDeleteTask(task.id)}
+                          onEdit={() => router.push(`/tasks/edit/${task.id}`)}
                         />
                       </td>
                     </tr>
@@ -356,79 +383,98 @@ function StatCard({
   );
 }
 
-function TaskActionMenu({ taskId, onDelete }: { taskId: string; onDelete: () => void }) {
+function TaskActionMenu({ 
+  taskId, 
+  onDelete,
+  onEdit 
+}: { 
+  taskId: string; 
+  onDelete: () => void;
+  onEdit?: () => void;
+}) {
   const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const [position, setPosition] = useState<{ top: number; left: number }>({
-    top: 0,
-    left: 0,
-  });
   const router = useRouter();
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
+        menuRef.current &&
+        !menuRef.current.contains(event.target as Node) &&
         buttonRef.current &&
         !buttonRef.current.contains(event.target as Node)
       ) {
         setOpen(false);
       }
     }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const toggleMenu = () => {
-    if (buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      setPosition({ top: rect.bottom + 4, left: rect.left });
+    if (open) {
+      document.addEventListener("mousedown", handleClickOutside);
     }
-    setOpen((prev) => !prev);
-  };
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [open]);
 
   const handleEdit = () => {
-    router.push(`/tasks/edit/${taskId}`);
+    if (onEdit) {
+      onEdit();
+    } else {
+      router.push(`/tasks/edit/${taskId}`);
+    }
     setOpen(false);
   };
 
   const handleDelete = () => {
-    if (confirm("Are you sure you want to delete this task? This action cannot be undone.")) {
-      onDelete();
-      setOpen(false);
-    }
+    onDelete();
+    setOpen(false);
   };
 
   return (
-    <>
+    <div className="relative inline-block">
       <button
         ref={buttonRef}
-        className="p-1 rounded hover:bg-slate-100"
-        onClick={toggleMenu}
+        className="p-2 rounded hover:bg-slate-100 transition-colors"
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen(!open);
+        }}
+        aria-label="Task actions"
+        type="button"
       >
-        <MoreVertical size={16} />
+        <MoreVertical size={18} className="text-gray-600" />
       </button>
 
       {open && (
         <div
-          className="absolute bg-white border rounded shadow-lg flex flex-col items-center py-1 z-50"
-          style={{ top: position.top, left: position.left, width: 40 }}
+          ref={menuRef}
+          className="absolute bg-white border border-gray-200 rounded-lg shadow-lg flex flex-col py-1 z-50 min-w-[140px] right-0 mt-1"
+          onClick={(e) => e.stopPropagation()}
         >
           <button
-            className="p-2 hover:bg-slate-100 rounded"
-            onClick={handleEdit}
-            title="Edit"
+            className="px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-sm text-gray-700 w-full text-left transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEdit();
+            }}
+            type="button"
           >
             <Edit size={16} className="text-blue-500" />
+            <span>Edit Task</span>
           </button>
           <button
-            className="p-2 hover:bg-slate-100 rounded"
-            onClick={handleDelete}
-            title="Delete"
+            className="px-4 py-2 hover:bg-red-50 flex items-center gap-2 text-sm text-red-600 w-full text-left transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDelete();
+            }}
+            type="button"
           >
-            <Trash2 size={16} className="text-red-600" />
+            <Trash2 size={16} />
+            <span>Delete Task</span>
           </button>
         </div>
       )}
-    </>
+    </div>
   );
 }

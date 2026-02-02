@@ -154,7 +154,7 @@ export default function CreateTaskPage() {
       console.log("Task created successfully:", data);
       const successData = data as ApiResponse<CreateTaskResponse>;
       
-      router.push("/dashboard");
+      router.push("/dashboard?refresh=true");
     } catch (err) {
       console.error("Task creation error:", err);
       setError(err instanceof Error ? err.message : "An error occurred. Please try again.");

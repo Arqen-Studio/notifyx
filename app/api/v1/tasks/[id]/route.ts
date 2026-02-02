@@ -15,7 +15,7 @@ const REMINDER_OFFSETS: Record<string, number> = {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -31,7 +31,7 @@ export async function GET(
     }
 
     const userId = session.user.id;
-    const taskId = params.id;
+    const { id: taskId } = await params;
 
     const task = await prisma.task.findFirst({
       where: {
@@ -46,6 +46,15 @@ export async function GET(
           },
         },
         reminder_rules: true,
+        reminders: {
+          select: {
+            id: true,
+            scheduled_for: true,
+            status: true,
+            sent_at: true,
+            interval_key: true,
+          },
+        },
       },
     });
 
@@ -79,13 +88,13 @@ export async function GET(
             offset_seconds: rr.offset_seconds,
             enabled: rr.enabled,
           })),
-          reminders: task.reminders.map((r) => ({
+          reminders: task.reminders ? task.reminders.map((r) => ({
             id: r.id,
             scheduled_for: r.scheduled_for.toISOString(),
             status: r.status,
             sent_at: r.sent_at?.toISOString() || null,
             interval_key: r.interval_key,
-          })),
+          })) : [],
         },
       },
       meta: {
@@ -109,7 +118,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -125,7 +134,7 @@ export async function PUT(
     }
 
     const userId = session.user.id;
-    const taskId = params.id;
+    const { id: taskId } = await params;
     const body = await request.json();
 
     const validationResult = updateTaskSchema.safeParse(body);
@@ -306,6 +315,15 @@ export async function PUT(
             },
           },
           reminder_rules: true,
+          reminders: {
+            select: {
+              id: true,
+              scheduled_for: true,
+              status: true,
+              sent_at: true,
+              interval_key: true,
+            },
+          },
         },
       });
     });
@@ -334,13 +352,15 @@ export async function PUT(
             offset_seconds: rr.offset_seconds,
             enabled: rr.enabled,
           })),
-          reminders: task.reminders.map((r) => ({
-            id: r.id,
-            scheduled_for: r.scheduled_for.toISOString(),
-            status: r.status,
-            sent_at: r.sent_at?.toISOString() || null,
-            interval_key: r.interval_key,
-          })),
+          reminders: task.reminders && Array.isArray(task.reminders)
+            ? task.reminders.map((r) => ({
+                id: r.id,
+                scheduled_for: r.scheduled_for.toISOString(),
+                status: r.status,
+                sent_at: r.sent_at?.toISOString() || null,
+                interval_key: r.interval_key,
+              }))
+            : [],
         },
       },
       meta: {
@@ -364,7 +384,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -380,7 +400,7 @@ export async function DELETE(
     }
 
     const userId = session.user.id;
-    const taskId = params.id;
+    const { id: taskId } = await params;
 
     const existingTask = await prisma.task.findFirst({
       where: {

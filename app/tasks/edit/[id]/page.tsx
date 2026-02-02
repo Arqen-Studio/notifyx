@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Plus } from "lucide-react";
+import { Plus, Calendar, Clock, Bell, CheckCircle, XCircle } from "lucide-react";
 import Button from "@/components/button";
 import { ApiError, ApiResponse, TaskResponse } from "@/types/api";
 
@@ -38,6 +38,7 @@ export default function EditTaskPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [taskDetails, setTaskDetails] = useState<TaskResponse | null>(null);
   
   const [form, setForm] = useState<EditTaskPayload>({
     title: "",
@@ -57,18 +58,75 @@ export default function EditTaskPage() {
   useEffect(() => {
     async function loadTask() {
       try {
-        const response = await fetch(`/api/v1/tasks/${taskId}`);
-        
-        if (!response.ok) {
-          if (response.status === 404) {
-            setError("Task not found");
-            return;
-          }
-          throw new Error("Failed to load task");
+        if (!taskId) {
+          setError("Task ID is missing");
+          setLoading(false);
+          return;
         }
 
-        const data = await response.json() as ApiResponse<{ task: TaskResponse }>;
+        console.log("Fetching task:", `/api/v1/tasks/${taskId}`);
+        const response = await fetch(`/api/v1/tasks/${taskId}`);
+        
+        console.log("Response status:", response.status, response.ok);
+        
+        if (!response.ok) {
+          let errorMessage = "Failed to load task";
+          
+          if (response.status === 404) {
+            errorMessage = "Task not found";
+          } else if (response.status === 401) {
+            errorMessage = "You must be logged in to view this task. Please log in and try again.";
+          } else {
+            try {
+              const errorText = await response.text();
+              console.error("Error response text:", errorText);
+              if (errorText) {
+                try {
+                  const errorData = JSON.parse(errorText);
+                  errorMessage = errorData?.error?.message || `Error ${response.status}: ${response.statusText}`;
+                } catch {
+                  errorMessage = errorText.length < 200 ? errorText : `Error ${response.status}: ${response.statusText || "Unknown error"}`;
+                }
+              } else {
+                errorMessage = `Error ${response.status}: ${response.statusText || "Unknown error"}`;
+              }
+            } catch (parseError) {
+              console.error("Failed to parse error:", parseError);
+              errorMessage = `Error ${response.status}: ${response.statusText || "Unknown error"}`;
+            }
+          }
+          
+          console.error("Setting error:", errorMessage);
+          setError(errorMessage);
+          setLoading(false);
+          return;
+        }
+
+        const responseText = await response.text();
+        console.log("Response text:", responseText);
+        
+        let data: ApiResponse<{ task: TaskResponse }>;
+        try {
+          data = JSON.parse(responseText) as ApiResponse<{ task: TaskResponse }>;
+        } catch (parseError) {
+          console.error("Failed to parse JSON:", parseError);
+          setError("Invalid response from server. Please try again.");
+          setLoading(false);
+          return;
+        }
+        
+        console.log("Parsed data:", data);
+        
+        if (!data || !data.data || !data.data.task) {
+          console.error("Invalid task data structure:", data);
+          setError("Invalid task data received from server");
+          setLoading(false);
+          return;
+        }
+
         const task = data.data.task;
+        console.log("Task loaded successfully:", task);
+        setTaskDetails(task);
 
         const deadline = new Date(task.deadline_at);
         const deadlineDate = deadline.toISOString().split("T")[0];
@@ -80,34 +138,36 @@ export default function EditTaskPage() {
           { id: "1h", label: "1 hour before deadline", enabled: false },
         ];
 
-        task.reminder_rules.forEach((rr) => {
-          const offsetDays = rr.offset_seconds / (24 * 60 * 60);
-          if (offsetDays === 7) {
-            const reminder = reminders.find((r) => r.id === "7d");
-            if (reminder) reminder.enabled = rr.enabled;
-          } else if (offsetDays === 1) {
-            const reminder = reminders.find((r) => r.id === "1d");
-            if (reminder) reminder.enabled = rr.enabled;
-          } else if (rr.offset_seconds === 3600) {
-            const reminder = reminders.find((r) => r.id === "1h");
-            if (reminder) reminder.enabled = rr.enabled;
-          }
-        });
+        if (task.reminder_rules && Array.isArray(task.reminder_rules)) {
+          task.reminder_rules.forEach((rr) => {
+            const offsetDays = rr.offset_seconds / (24 * 60 * 60);
+            if (offsetDays === 7) {
+              const reminder = reminders.find((r) => r.id === "7d");
+              if (reminder) reminder.enabled = rr.enabled;
+            } else if (offsetDays === 1) {
+              const reminder = reminders.find((r) => r.id === "1d");
+              if (reminder) reminder.enabled = rr.enabled;
+            } else if (rr.offset_seconds === 3600) {
+              const reminder = reminders.find((r) => r.id === "1h");
+              if (reminder) reminder.enabled = rr.enabled;
+            }
+          });
+        }
 
         setForm({
-          title: task.title,
+          title: task.title || "",
           clientId: null,
           deadlineDate,
           deadlineTime,
           status: task.status === "active" ? "Active" : "Completed",
-          tags: task.tags.map((t) => t.name),
+          tags: task.tags && Array.isArray(task.tags) ? task.tags.map((t) => t.name) : [],
           description: task.notes || "",
           reminders,
         });
+        setLoading(false);
       } catch (err) {
         console.error("Error loading task:", err);
-        setError("Failed to load task. Please try again.");
-      } finally {
+        setError(err instanceof Error ? err.message : "Failed to load task. Please try again.");
         setLoading(false);
       }
     }
@@ -188,30 +248,54 @@ export default function EditTaskPage() {
         let errorMessage = "An error occurred while updating the task.";
         
         try {
-          const text = await response.text();
-          console.log("Raw error response text:", text);
+          const contentType = response.headers.get("content-type");
+          console.log("Response content-type:", contentType);
           
-          if (text && text.trim().length > 0) {
-            try {
-              const errorData = JSON.parse(text) as ApiError;
-              console.error("Task update error response:", errorData);
-              
-              if (errorData?.error?.message) {
-                errorMessage = errorData.error.message;
+          if (contentType && contentType.includes("application/json")) {
+            const errorData = await response.json() as ApiError;
+            console.error("Task update error response:", errorData);
+            
+            if (errorData?.error?.message) {
+              errorMessage = errorData.error.message;
+            }
+            
+            if (errorData?.error?.details && typeof errorData.error.details === "object") {
+              const details = errorData.error.details;
+              const firstError = Object.values(details)[0];
+              if (typeof firstError === "string") {
+                errorMessage = firstError;
               }
-              
-              if (errorData?.error?.details && typeof errorData.error.details === "object") {
-                const details = errorData.error.details;
-                const firstError = Object.values(details)[0];
-                if (typeof firstError === "string") {
-                  errorMessage = firstError;
+            }
+          } else {
+            const text = await response.text();
+            console.log("Raw error response text:", text);
+            
+            if (text && text.trim().length > 0) {
+              try {
+                const errorData = JSON.parse(text) as ApiError;
+                console.error("Task update error response (parsed):", errorData);
+                
+                if (errorData?.error?.message) {
+                  errorMessage = errorData.error.message;
+                }
+                
+                if (errorData?.error?.details && typeof errorData.error.details === "object") {
+                  const details = errorData.error.details;
+                  const firstError = Object.values(details)[0];
+                  if (typeof firstError === "string") {
+                    errorMessage = firstError;
+                  }
+                }
+              } catch (jsonParseError) {
+                console.error("Failed to parse JSON from error response:", jsonParseError);
+                if (text.length < 200) {
+                  errorMessage = text;
+                } else {
+                  errorMessage = `Error ${response.status}: ${response.statusText || "Unknown error"}`;
                 }
               }
-            } catch (jsonParseError) {
-              console.error("Failed to parse JSON from error response:", jsonParseError);
-              if (text.length < 200) {
-                errorMessage = text;
-              }
+            } else {
+              errorMessage = `Error ${response.status}: ${response.statusText || "Unknown error"}`;
             }
           }
         } catch (readError) {
@@ -219,18 +303,35 @@ export default function EditTaskPage() {
           errorMessage = `Error ${response.status}: ${response.statusText || "Network error"}`;
         }
         
+        console.error("Final error message:", errorMessage);
         setError(errorMessage);
         setSaving(false);
         return;
       }
 
-      const data = await response.json();
-      console.log("Task updated successfully:", data);
+      const responseText = await response.text();
+      console.log("Update response text:", responseText);
       
-      router.push("/dashboard");
+      if (!responseText || responseText.trim().length === 0) {
+        console.warn("Empty response from server");
+        router.push("/dashboard?refresh=true");
+        return;
+      }
+
+      try {
+        const data = JSON.parse(responseText);
+        console.log("Task updated successfully:", data);
+        router.push("/dashboard?refresh=true");
+      } catch (parseError) {
+        console.error("Failed to parse success response:", parseError);
+        router.push("/dashboard?refresh=true");
+      }
     } catch (err) {
       console.error("Task update error:", err);
-      setError(err instanceof Error ? err.message : "An error occurred. Please try again.");
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : "An error occurred while updating the task. Please try again.";
+      setError(errorMessage);
       setSaving(false);
     }
   }
@@ -267,12 +368,100 @@ export default function EditTaskPage() {
       <main className="flex-1">
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-6 md:py-10">
           <div className="max-w-3xl mx-auto">
-          <h2 className="text-2xl font-semibold mb-6">Edit Task</h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-semibold">Edit Task</h2>
+            <Button
+              variant="outline"
+              onClick={() => router.push("/dashboard")}
+            >
+              Back to Dashboard
+            </Button>
+          </div>
 
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
               {error}
             </div>
+          )}
+
+          {taskDetails && (
+            <Card className="mb-6">
+              <CardContent className="p-6">
+                <h3 className="text-lg font-semibold mb-4">Task Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-start gap-3">
+                    <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
+                    <div>
+                      <p className="text-sm text-gray-500">Created</p>
+                      <p className="text-sm font-medium">
+                        {new Date(taskDetails.created_at).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Clock className="w-5 h-5 text-gray-400 mt-0.5" />
+                    <div>
+                      <p className="text-sm text-gray-500">Last Updated</p>
+                      <p className="text-sm font-medium">
+                        {new Date(taskDetails.updated_at).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    {taskDetails.status === "active" ? (
+                      <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
+                    ) : (
+                      <XCircle className="w-5 h-5 text-gray-400 mt-0.5" />
+                    )}
+                    <div>
+                      <p className="text-sm text-gray-500">Status</p>
+                      <p className="text-sm font-medium capitalize">
+                        {taskDetails.status === "active" ? "Active" : "Completed"}
+                      </p>
+                    </div>
+                  </div>
+                  {taskDetails.reminders && taskDetails.reminders.length > 0 && (
+                    <div className="flex items-start gap-3">
+                      <Bell className="w-5 h-5 text-gray-400 mt-0.5" />
+                      <div>
+                        <p className="text-sm text-gray-500">Reminders</p>
+                        <p className="text-sm font-medium">
+                          {taskDetails.reminders.filter((r) => r.status === "sent").length} sent,{" "}
+                          {taskDetails.reminders.filter((r) => r.status === "pending").length} pending
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                {taskDetails.tags && taskDetails.tags.length > 0 && (
+                  <div className="mt-4 pt-4 border-t">
+                    <p className="text-sm text-gray-500 mb-2">Tags</p>
+                    <div className="flex flex-wrap gap-2">
+                      {taskDetails.tags.map((tag) => (
+                        <span
+                          key={tag.id}
+                          className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700"
+                        >
+                          {tag.name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           )}
 
           <Card>
