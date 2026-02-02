@@ -43,7 +43,13 @@ export async function POST(request: NextRequest) {
                 tag: true,
               },
             },
-            user: true,
+            user: {
+              select: {
+                id: true,
+                email: true,
+                name: true,
+              },
+            },
           },
         },
       },
@@ -90,6 +96,22 @@ export async function POST(request: NextRequest) {
       }
 
       try {
+        const userEmail = reminder.task.user?.email;
+        
+        if (!userEmail) {
+          await prisma.reminder.update({
+            where: { id: reminder.id },
+            data: {
+              status: "failed",
+              error: "User email not found",
+              attempts: { increment: 1 },
+              last_attempt_at: new Date(),
+            },
+          });
+          results.push({ reminderId: reminder.id, status: "failed", error: "User email not found" });
+          continue;
+        }
+
         await prisma.reminder.update({
           where: { id: reminder.id },
           data: {
@@ -104,11 +126,11 @@ export async function POST(request: NextRequest) {
           : "Reminder";
 
         const emailResult = await sendReminderEmail(
-          reminder.task.user.email,
+          userEmail,
           reminder.task.title,
           deadline,
           reminder.task.notes,
-          reminder.task.tags.map((tt) => ({ name: tt.tag.name })),
+          reminder.task.tags.map((tt: { tag: { name: string } }) => ({ name: tt.tag.name })),
           intervalLabel
         );
 

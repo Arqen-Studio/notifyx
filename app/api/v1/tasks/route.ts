@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
       status: task.status,
       created_at: task.created_at.toISOString(),
       updated_at: task.updated_at.toISOString(),
-      tags: task.tags.map((tt) => ({
+      tags: task.tags.map((tt: { tag: { id: string; name: string } }) => ({
         id: tt.tag.id,
         name: tt.tag.name,
       })),

@@ -78,7 +78,7 @@ export async function GET(
           status: task.status,
           created_at: task.created_at.toISOString(),
           updated_at: task.updated_at.toISOString(),
-          tags: task.tags.map((tt) => ({
+          tags: task.tags.map((tt: { tag: { id: string; name: string } }) => ({
             id: tt.tag.id,
             name: tt.tag.name,
           })),
@@ -222,7 +222,7 @@ export async function PUT(
         
         const reminderIntervals = reminders
           ?.filter((r) => r.enabled)
-          .map((r) => {
+          .map((r): string | null => {
             if (r.id === "7d") return "P1W";
             if (r.id === "1d") return "P1D";
             if (r.id === "1h") return null;
@@ -340,7 +340,7 @@ export async function PUT(
           status: task.status,
           created_at: task.created_at.toISOString(),
           updated_at: task.updated_at.toISOString(),
-          tags: task.tags.map((tt) => ({
+          tags: task.tags.map((tt: { tag: { id: string; name: string } }) => ({
             id: tt.tag.id,
             name: tt.tag.name,
           })),

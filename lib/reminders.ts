@@ -1,4 +1,6 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Prisma } from "@prisma/client";
+
+type PrismaTransaction = Omit<PrismaClient, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">;
 
 const STANDARD_INTERVALS: Record<string, number> = {
   P3M: 3 * 30 * 24 * 60 * 60,
@@ -11,7 +13,7 @@ const STANDARD_INTERVALS: Record<string, number> = {
 };
 
 export async function scheduleRemindersForTask(
-  prisma: PrismaClient,
+  prisma: PrismaClient | PrismaTransaction,
   taskId: string,
   userId: string,
   deadlineAt: Date,
@@ -48,7 +50,7 @@ export async function scheduleRemindersForTask(
 }
 
 export async function cancelFutureRemindersForTask(
-  prisma: PrismaClient,
+  prisma: PrismaClient | PrismaTransaction,
   taskId: string
 ) {
   await prisma.reminder.updateMany({
@@ -67,7 +69,7 @@ export async function cancelFutureRemindersForTask(
 }
 
 export async function rescheduleRemindersForTask(
-  prisma: PrismaClient,
+  prisma: PrismaClient | PrismaTransaction,
   taskId: string,
   userId: string,
   deadlineAt: Date,

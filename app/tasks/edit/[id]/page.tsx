@@ -78,8 +78,16 @@ export default function EditTaskPage() {
         setTaskDetails(task);
 
         const deadline = new Date(task.deadline_at);
-        const deadlineDate = deadline.toISOString().split("T")[0];
-        const deadlineTime = deadline.toTimeString().slice(0, 5);
+        
+        // Use local date methods to avoid timezone issues
+        const year = deadline.getFullYear();
+        const month = String(deadline.getMonth() + 1).padStart(2, "0");
+        const day = String(deadline.getDate()).padStart(2, "0");
+        const deadlineDate = `${year}-${month}-${day}`;
+        
+        const hours = String(deadline.getHours()).padStart(2, "0");
+        const minutes = String(deadline.getMinutes()).padStart(2, "0");
+        const deadlineTime = `${hours}:${minutes}`;
 
         const reminders: ReminderRule[] = [
           { id: "7d", label: "7 days before deadline", enabled: false },
