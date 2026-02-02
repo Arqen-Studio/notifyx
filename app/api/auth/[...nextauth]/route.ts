@@ -41,7 +41,6 @@ export const authOptions: NextAuthOptions = {
             name: user.name || undefined,
           };
         } catch (error) {
-          console.error("NextAuth authorize error:", error);
           return null;
         }
       },
@@ -71,7 +70,6 @@ export const authOptions: NextAuthOptions = {
         }
         return true;
       } catch (error) {
-        console.error("NextAuth signIn callback error:", error);
         return false;
       }
     },

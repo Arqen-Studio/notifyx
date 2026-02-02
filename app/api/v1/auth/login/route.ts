@@ -68,7 +68,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(response, { status: 200 });
   } catch (error) {
-    console.error("Login error:", error);
     return NextResponse.json(
       createApiError(
         "INTERNAL_ERROR",

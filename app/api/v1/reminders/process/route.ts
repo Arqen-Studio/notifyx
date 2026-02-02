@@ -159,7 +159,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(response, { status: 200 });
   } catch (error) {
-    console.error("Process reminders error:", error);
     return NextResponse.json(
       createApiError("INTERNAL_ERROR", "An error occurred while processing reminders"),
       { status: 500 }

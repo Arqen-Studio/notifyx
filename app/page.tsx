@@ -32,7 +32,6 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-[#FFFFFF] flex flex-col">
-      {/* Hero Section */}
       <section className="flex-1 flex items-center justify-center py-20">
         <div className="max-w-7xl mx-auto w-full px-4 md:px-8">
           <div className="text-center mb-16">
@@ -68,7 +67,6 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Features Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-20">
             {features.map((feature, index) => (
               <div
@@ -88,7 +86,6 @@ export default function HomePage() {
             ))}
           </div>
 
-          {/* CTA Section */}
           <div className="mt-20 text-center">
             <div className="bg-gradient-to-br from-[#FBFBFA] to-[#F6F6F3] rounded-[26px] p-12 border border-[#E7E7E7]">
               <h2 className="font-bricolage text-3xl md:text-4xl font-extrabold text-[#171717] mb-4">

@@ -69,11 +69,6 @@ Please ensure this task is completed by the deadline.
   `;
 
   if (process.env.EMAIL_PROVIDER === "console") {
-    console.log("=== EMAIL REMINDER ===");
-    console.log(`To: ${to}`);
-    console.log(`Subject: ${subject}`);
-    console.log(`Body:\n${textBody}`);
-    console.log("=====================");
     return { success: true, messageId: `console-${Date.now()}` };
   }
 

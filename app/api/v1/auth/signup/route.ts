@@ -9,7 +9,6 @@ export async function POST(request: NextRequest) {
     try {
       await prisma.$connect();
     } catch (dbError) {
-      console.error("Database connection error:", dbError);
       return NextResponse.json(
         createApiError(
           "INTERNAL_ERROR",
@@ -41,7 +40,6 @@ export async function POST(request: NextRequest) {
         "A user with this email already exists",
         { field: "email" }
       );
-      console.log("Returning 409 error:", JSON.stringify(errorResponse));
       return NextResponse.json(errorResponse, { status: 409 });
     }
 
@@ -83,8 +81,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(response, { status: 201 });
   } catch (error) {
-    console.error("Signup error:", error);
-    
     if (error instanceof Error) {
       if (error.message.includes("P1001") || error.message.includes("connect")) {
         return NextResponse.json(

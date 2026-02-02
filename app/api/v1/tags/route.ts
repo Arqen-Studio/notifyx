@@ -49,7 +49,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response, { status: 200 });
   } catch (error) {
-    console.error("Get tags error:", error);
     return NextResponse.json(
       createApiError("INTERNAL_ERROR", "An error occurred while fetching tags"),
       { status: 500 }
@@ -108,7 +107,6 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json(response, { status: 200 });
   } catch (error) {
-    console.error("Delete tag error:", error);
     return NextResponse.json(
       createApiError("INTERNAL_ERROR", "An error occurred while deleting the tag"),
       { status: 500 }
@@ -186,7 +184,6 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json(response, { status: 200 });
   } catch (error) {
-    console.error("Update tag error:", error);
     return NextResponse.json(
       createApiError("INTERNAL_ERROR", "An error occurred while updating the tag"),
       { status: 500 }

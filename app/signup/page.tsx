@@ -63,7 +63,6 @@ export default function SignUpPage() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Signup form submitted", form);
     setError(null);
     setLoading(true);
 
@@ -76,8 +75,6 @@ export default function SignUpPage() {
         password: form.password,
       };
       
-      console.log("Sending signup request:", { ...requestBody, password: "***" });
-      
       const response = await fetch("/api/v1/auth/signup", {
         method: "POST",
         headers: {
@@ -85,8 +82,6 @@ export default function SignUpPage() {
         },
         body: JSON.stringify(requestBody),
       });
-
-      console.log("Signup response status:", response.status);
 
       if (!response.ok) {
         let errorMessage = "An error occurred. Please try again.";
@@ -97,12 +92,10 @@ export default function SignUpPage() {
         
         try {
           const text = await response.text();
-          console.log("Raw error response text:", text);
           
           if (text && text.trim().length > 0) {
             try {
               const errorData = JSON.parse(text) as ApiError;
-              console.error("Signup error response:", errorData);
               
               if (errorData?.error?.message) {
                 errorMessage = errorData.error.message;
@@ -122,14 +115,12 @@ export default function SignUpPage() {
                 }
               }
             } catch (jsonParseError) {
-              console.error("Failed to parse JSON from error response:", jsonParseError);
               if (text.length < 200) {
                 errorMessage = text;
               }
             }
           }
         } catch (readError) {
-          console.error("Failed to read error response:", readError);
           if (response.status === 409) {
             errorMessage = "This email is already registered. Please use a different email or try logging in.";
           } else {
@@ -137,19 +128,16 @@ export default function SignUpPage() {
           }
         }
         
-        console.log("Final error message:", errorMessage);
         setError(errorMessage);
         setLoading(false);
         return;
       }
 
       const data = await response.json();
-      console.log("Signup success:", data);
       const successData = data as ApiResponse<SignupResponse>;
       
       router.push("/login?signup=success");
     } catch (err) {
-      console.error("Signup error:", err);
       const errorMessage = err instanceof Error ? err.message : "An error occurred. Please try again.";
       setError(errorMessage);
       setLoading(false);

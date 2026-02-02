@@ -104,8 +104,6 @@ export async function GET(
 
     return NextResponse.json(response, { status: 200 });
   } catch (error) {
-    console.error("Get task error:", error);
-    
     return NextResponse.json(
       createApiError(
         "INTERNAL_ERROR",
@@ -370,8 +368,6 @@ export async function PUT(
 
     return NextResponse.json(response, { status: 200 });
   } catch (error) {
-    console.error("Update task error:", error);
-    
     return NextResponse.json(
       createApiError(
         "INTERNAL_ERROR",
@@ -443,8 +439,6 @@ export async function DELETE(
 
     return NextResponse.json(response, { status: 200 });
   } catch (error) {
-    console.error("Delete task error:", error);
-    
     return NextResponse.json(
       createApiError(
         "INTERNAL_ERROR",

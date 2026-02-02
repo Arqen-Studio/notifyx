@@ -131,8 +131,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response, { status: 200 });
   } catch (error) {
-    console.error("Get tasks error:", error);
-    
     return NextResponse.json(
       createApiError(
         "INTERNAL_ERROR",
@@ -320,8 +318,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(response, { status: 201 });
   } catch (error) {
-    console.error("Create task error:", error);
-    
     if (error instanceof Error) {
       if (error.message.includes("P1001") || error.message.includes("connect")) {
         return NextResponse.json(
