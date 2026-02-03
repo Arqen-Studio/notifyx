@@ -228,7 +228,7 @@ export async function PUT(
             if (r.id === "1h") return null;
             return null;
           })
-          .filter((interval): interval is string => interval !== null) || [];
+          .filter((interval): interval is "P1W" | "P1D" => interval !== null) || [];
 
         const intervalsToUse = reminderIntervals.length > 0 
           ? reminderIntervals.filter((interval) => enabledIntervals.includes(interval))
