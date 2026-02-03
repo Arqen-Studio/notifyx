@@ -222,7 +222,7 @@ export async function PUT(
         
         const reminderIntervals = reminders
           ?.filter((r) => r.enabled)
-          .map((r): string | null => {
+          .map((r): "P1W" | "P1D" | null => {
             if (r.id === "7d") return "P1W";
             if (r.id === "1d") return "P1D";
             if (r.id === "1h") return null;
