@@ -50,3 +50,7 @@ next-env.d.ts
 *.swp
 *.swo
 *~
+
+# local test scripts
+test-reminders.js
+TEST-REMINDERS.md

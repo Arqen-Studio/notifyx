@@ -317,6 +317,7 @@ export async function PUT(
           notes: task.notes,
           deadline_at: task.deadline_at.toISOString(),
           status: task.status,
+          deleted_at: task.deleted_at?.toISOString() || null,
           created_at: task.created_at.toISOString(),
           updated_at: task.updated_at.toISOString(),
           tags: task.tags.map((tt: { tag: { id: string; name: string } }) => ({
