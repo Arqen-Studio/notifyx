@@ -22,13 +22,7 @@ export default function CreateTaskPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { form, updateField, toggleReminder } = useTaskForm({
-    reminders: [
-      { id: "7d", label: "7 days before deadline", enabled: true },
-      { id: "1d", label: "1 day before deadline", enabled: true },
-      { id: "1h", label: "1 hour before deadline", enabled: false },
-    ],
-  });
+  const { form, updateField, toggleReminder } = useTaskForm();
 
   async function handleSubmit(e?: React.FormEvent) {
     if (e) {

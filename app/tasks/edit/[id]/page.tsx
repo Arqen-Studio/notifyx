@@ -89,24 +89,28 @@ export default function EditTaskPage() {
         const minutes = String(deadline.getMinutes()).padStart(2, "0");
         const deadlineTime = `${hours}:${minutes}`;
 
+        // Initialize all available reminder intervals
         const reminders: ReminderRule[] = [
-          { id: "7d", label: "7 days before deadline", enabled: false },
-          { id: "1d", label: "1 day before deadline", enabled: false },
-          { id: "1h", label: "1 hour before deadline", enabled: false },
+          { id: "P3M", label: "3 months before deadline", enabled: false },
+          { id: "P1M", label: "1 month before deadline", enabled: false },
+          { id: "P3W", label: "3 weeks before deadline", enabled: false },
+          { id: "P2W", label: "2 weeks before deadline", enabled: false },
+          { id: "P1W", label: "1 week before deadline", enabled: false },
+          { id: "P3D", label: "3 days before deadline", enabled: false },
+          { id: "P1D", label: "1 day before deadline", enabled: false },
         ];
 
-        if (task.reminder_rules && Array.isArray(task.reminder_rules)) {
-          task.reminder_rules.forEach((rr) => {
-            const offsetDays = rr.offset_seconds / (24 * 60 * 60);
-            if (offsetDays === 7) {
-              const reminder = reminders.find((r) => r.id === "7d");
-              if (reminder) reminder.enabled = rr.enabled;
-            } else if (offsetDays === 1) {
-              const reminder = reminders.find((r) => r.id === "1d");
-              if (reminder) reminder.enabled = rr.enabled;
-            } else if (rr.offset_seconds === 3600) {
-              const reminder = reminders.find((r) => r.id === "1h");
-              if (reminder) reminder.enabled = rr.enabled;
+        // Map existing reminders based on interval_key from reminders
+        if (task.reminders && Array.isArray(task.reminders)) {
+          const enabledIntervals = new Set(
+            task.reminders
+              .filter((r) => r.status === "pending" && r.interval_key)
+              .map((r) => r.interval_key)
+          );
+          
+          reminders.forEach((reminder) => {
+            if (enabledIntervals.has(reminder.id)) {
+              reminder.enabled = true;
             }
           });
         }

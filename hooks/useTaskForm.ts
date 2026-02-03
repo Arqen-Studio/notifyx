@@ -2,9 +2,13 @@ import { useState, useCallback } from "react";
 import { TaskFormData, ReminderRule } from "@/components/tasks";
 
 const DEFAULT_REMINDERS: ReminderRule[] = [
-  { id: "7d", label: "7 days before deadline", enabled: false },
-  { id: "1d", label: "1 day before deadline", enabled: false },
-  { id: "1h", label: "1 hour before deadline", enabled: false },
+  { id: "P3M", label: "3 months before deadline", enabled: true },
+  { id: "P1M", label: "1 month before deadline", enabled: true },
+  { id: "P3W", label: "3 weeks before deadline", enabled: true },
+  { id: "P2W", label: "2 weeks before deadline", enabled: true },
+  { id: "P1W", label: "1 week before deadline", enabled: true },
+  { id: "P3D", label: "3 days before deadline", enabled: true },
+  { id: "P1D", label: "1 day before deadline", enabled: true },
 ];
 
 export function useTaskForm(initialData?: Partial<TaskFormData>) {

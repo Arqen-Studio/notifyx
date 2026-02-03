@@ -5,6 +5,8 @@ import { ApiResponse, GetTasksResponse, TaskResponse } from "@/types/api";
 export interface DashboardStats {
   upcomingCount: number;
   activeCount: number;
+  completedCount: number;
+  archivedCount: number;
   remindersSentToday: number;
 }
 
@@ -20,16 +22,23 @@ async function fetchDashboardStats(tasks: TaskResponse[]): Promise<DashboardStat
   const now = new Date();
   const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-  const upcomingTasks = tasks.filter((task) => {
+  // Filter out archived tasks for these calculations
+  const nonArchivedTasks = tasks.filter((task) => task.deleted_at === null);
+
+  const upcomingTasks = nonArchivedTasks.filter((task) => {
     const deadline = new Date(task.deadline_at);
     return deadline >= now && deadline <= sevenDaysFromNow && task.status === "active";
   });
 
-  const activeTasks = tasks.filter((task) => task.status === "active");
+  const activeTasks = nonArchivedTasks.filter((task) => task.status === "active");
+  const completedTasks = nonArchivedTasks.filter((task) => task.status === "completed");
+  const archivedTasks = tasks.filter((task) => task.deleted_at !== null);
 
   return {
     upcomingCount: upcomingTasks.length,
     activeCount: activeTasks.length,
+    completedCount: completedTasks.length,
+    archivedCount: archivedTasks.length,
     remindersSentToday: 0,
   };
 }
@@ -75,7 +84,14 @@ export function useDashboard() {
     queryParams.set("sortOrder", filters.sortOrder);
 
     const tasksRes = await fetchTasks(queryParams.toString());
-    const statsRes = await fetchDashboardStats(tasksRes);
+    
+    // Fetch ALL tasks (including archived) for accurate stats calculation
+    const allTasksParams = new URLSearchParams();
+    allTasksParams.set("includeArchived", "true");
+    const allTasksRes = await fetchTasks(allTasksParams.toString());
+    
+    // Calculate stats from all tasks (including archived for accurate counts)
+    const statsRes = await fetchDashboardStats(allTasksRes);
 
     const uniqueTags = new Map<string, { id: string; name: string }>();
     tasksRes.forEach((task) => {

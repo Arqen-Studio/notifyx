@@ -78,6 +78,7 @@ export async function GET(
           notes: task.notes,
           deadline_at: task.deadline_at.toISOString(),
           status: task.status,
+          deleted_at: task.deleted_at?.toISOString() || null,
           created_at: task.created_at.toISOString(),
           updated_at: task.updated_at.toISOString(),
           tags: task.tags.map((tt: { tag: { id: string; name: string } }) => ({
@@ -224,13 +225,17 @@ export async function PUT(
         
         const reminderIntervals = reminders
           ?.filter((r) => r.enabled)
-          .map((r): "P1W" | "P1D" | null => {
+          .map((r): "P3M" | "P1M" | "P3W" | "P2W" | "P1W" | "P3D" | "P1D" | null => {
+            // Map to ISO 8601 duration format
+            if (r.id === "P3M" || r.id === "P1M" || r.id === "P3W" || r.id === "P2W" || r.id === "P1W" || r.id === "P3D" || r.id === "P1D") {
+              return r.id as "P3M" | "P1M" | "P3W" | "P2W" | "P1W" | "P3D" | "P1D";
+            }
+            // Legacy support for old IDs
             if (r.id === "7d") return "P1W";
             if (r.id === "1d") return "P1D";
-            if (r.id === "1h") return null;
             return null;
           })
-          .filter((interval): interval is "P1W" | "P1D" => interval !== null) || [];
+          .filter((interval): interval is "P3M" | "P1M" | "P3W" | "P2W" | "P1W" | "P3D" | "P1D" => interval !== null) || [];
 
         const intervalsToUse = reminderIntervals.length > 0 
           ? reminderIntervals.filter((interval) => enabledIntervals.includes(interval))

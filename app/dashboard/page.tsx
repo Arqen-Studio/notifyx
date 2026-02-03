@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
-import { Bell, Clock, FileText, Plus } from "lucide-react";
+import { Bell, Clock, FileText, Plus, CheckCircle2, Archive } from "lucide-react";
 import Button from "@/components/button";
 import { useRouter } from "next/navigation";
 import { useDashboard } from "@/hooks/useDashboard";
@@ -46,7 +46,7 @@ function DashboardContent() {
 
         <DashboardFilters filters={filters} allTags={allTags} onFiltersChange={setFilters} />
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6 mb-6 sm:mb-10">
           <StatCard
             label="Upcoming in 7 Days"
             value={`${stats.upcomingCount} Tasks`}
@@ -58,9 +58,19 @@ function DashboardContent() {
             icon={<FileText className="text-blue-500" />}
           />
           <StatCard
-            label="Reminders Sent Today"
+            label="Completed Tasks"
+            value={`${stats.completedCount} Tasks`}
+            icon={<CheckCircle2 className="text-green-500" />}
+          />
+          <StatCard
+            label="Archived Tasks"
+            value={`${stats.archivedCount} Tasks`}
+            icon={<Archive className="text-slate-500" />}
+          />
+          <StatCard
+            label="Reminders Today"
             value={`${stats.remindersSentToday} Emails`}
-            icon={<Bell className="text-green-500" />}
+            icon={<Bell className="text-purple-500" />}
           />
         </div>
 
