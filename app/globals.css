@@ -104,12 +104,6 @@ body {
   margin-top: 10px;
 }
 
-/* .react-international-phone-flag-emoji {
-  font-size: 28px;
-  line-height: 2;
-
-} */
-
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);

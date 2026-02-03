@@ -4,10 +4,6 @@ import type { NextRequest } from "next/server";
 
 export default withAuth(
   function proxy(req: NextRequest & { nextauth?: { token?: any } }) {
-    // Explicitly allow NextAuth routes to pass through
-    if (req.nextUrl.pathname.startsWith("/api/auth")) {
-      return NextResponse.next();
-    }
     return NextResponse.next();
   },
   {
@@ -32,6 +28,5 @@ export const config = {
     "/tasks/:path*",
     "/api/v1/tasks/:path*",
     "/api/v1/tags/:path*",
-    "/api/v1/reminder-rules/:path*",
   ],
 };

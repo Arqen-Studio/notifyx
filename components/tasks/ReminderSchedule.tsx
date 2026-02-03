@@ -1,9 +1,7 @@
 "use client";
 
-import { Plus } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import Button from "@/components/button";
 
 export interface ReminderRule {
   id: string;
@@ -32,9 +30,6 @@ export function ReminderSchedule({
           <Switch checked={r.enabled} onCheckedChange={() => onToggle(r.id)} />
         </div>
       ))}
-      <Button variant="outline" className="w-full flex gap-2" type="button">
-        <Plus size={16} /> Add Reminder Rule
-      </Button>
     </div>
   );
 }

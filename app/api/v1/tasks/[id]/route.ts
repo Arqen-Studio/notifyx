@@ -5,15 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { updateTaskSchema, formatValidationError, createApiError } from "@/lib/validation";
 import { ApiResponse, TaskResponse, generateRequestId } from "@/types/api";
 import { rescheduleRemindersForTask, cancelFutureRemindersForTask } from "@/lib/reminders";
-import { prisma as prismaClient } from "@/lib/prisma";
 
 export const dynamic = 'force-dynamic';
-
-const REMINDER_OFFSETS: Record<string, number> = {
-  "7d": 7 * 24 * 60 * 60,
-  "1d": 1 * 24 * 60 * 60,
-  "1h": 1 * 60 * 60,
-};
 
 export async function GET(
   request: NextRequest,
@@ -288,27 +281,6 @@ export async function PUT(
       }
 
       if (reminders !== undefined) {
-        await tx.reminderRule.deleteMany({
-          where: { task_id: taskId },
-        });
-
-        if (reminders.length > 0) {
-          const reminderRulesToCreate = reminders
-            .filter((r) => r.enabled && REMINDER_OFFSETS[r.id])
-            .map((r) => ({
-              user_id: userId,
-              task_id: taskId,
-              label: r.label,
-              offset_seconds: REMINDER_OFFSETS[r.id],
-              enabled: true,
-            }));
-
-          if (reminderRulesToCreate.length > 0) {
-            await tx.reminderRule.createMany({
-              data: reminderRulesToCreate,
-            });
-          }
-        }
       }
 
       return await tx.task.findUnique({
