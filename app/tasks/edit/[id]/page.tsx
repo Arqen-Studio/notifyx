@@ -73,16 +73,29 @@ export default function EditTaskPage() {
         const task = data.data.task;
         setTaskDetails(task);
 
+        // Parse the ISO date string (UTC from database)
+        // new Date() automatically converts UTC to browser's local timezone
         const deadline = new Date(task.deadline_at);
         
-        const year = deadline.getFullYear();
-        const month = String(deadline.getMonth() + 1).padStart(2, "0");
-        const day = String(deadline.getDate()).padStart(2, "0");
-        const deadlineDate = `${year}-${month}-${day}`;
+        // Use toLocaleString to get local date/time, then parse it
+        // This ensures we get the exact local time as the user sees it
+        const localDateStr = deadline.toLocaleString("en-US", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+        });
         
-        const hours = String(deadline.getHours()).padStart(2, "0");
-        const minutes = String(deadline.getMinutes()).padStart(2, "0");
-        const deadlineTime = `${hours}:${minutes}`;
+        // Parse the local date string: "MM/DD/YYYY, HH:MM"
+        const [datePart, timePart] = localDateStr.split(", ");
+        const [month, day, year] = datePart.split("/");
+        const [hours, minutes] = timePart.split(":");
+        
+        const deadlineDate = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+        const deadlineTime = `${hours.padStart(2, "0")}:${minutes.padStart(2, "0")}`;
 
         const reminders: ReminderRule[] = [
           { id: "P3M", label: "3 months before deadline", enabled: false },
