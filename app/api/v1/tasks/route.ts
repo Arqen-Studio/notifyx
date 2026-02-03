@@ -192,8 +192,12 @@ export async function POST(request: NextRequest) {
 
     const { title, deadlineDate, deadlineTime, description, status, tags, reminders } = validationResult.data;
 
+    // Create date from local date/time string
+    // When no timezone is specified, JavaScript treats it as LOCAL time
+    // We need to ensure it's treated as local time, not UTC
+    // Format: "YYYY-MM-DDTHH:mm" (local time, no timezone)
     const deadlineDateTime = deadlineTime 
-      ? new Date(`${deadlineDate}T${deadlineTime}`)
+      ? new Date(`${deadlineDate}T${deadlineTime}:00`)
       : new Date(`${deadlineDate}T23:59:59`);
 
     if (deadlineDateTime < new Date()) {

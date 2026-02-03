@@ -73,29 +73,23 @@ export default function EditTaskPage() {
         const task = data.data.task;
         setTaskDetails(task);
 
-        // Parse the ISO date string (UTC from database)
-        // new Date() automatically converts UTC to browser's local timezone
+        // Parse the ISO date string from database (stored in UTC)
+        // When we do new Date(isoString), JavaScript interprets it as UTC
+        // and automatically converts to browser's local timezone
         const deadline = new Date(task.deadline_at);
         
-        // Use toLocaleString to get local date/time, then parse it
-        // This ensures we get the exact local time as the user sees it
-        const localDateStr = deadline.toLocaleString("en-US", {
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
-          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
-        });
+        // Extract date components using local timezone methods
+        // These methods automatically account for timezone conversion
+        const year = deadline.getFullYear();
+        const month = String(deadline.getMonth() + 1).padStart(2, "0");
+        const day = String(deadline.getDate()).padStart(2, "0");
+        const deadlineDate = `${year}-${month}-${day}`;
         
-        // Parse the local date string: "MM/DD/YYYY, HH:MM"
-        const [datePart, timePart] = localDateStr.split(", ");
-        const [month, day, year] = datePart.split("/");
-        const [hours, minutes] = timePart.split(":");
-        
-        const deadlineDate = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
-        const deadlineTime = `${hours.padStart(2, "0")}:${minutes.padStart(2, "0")}`;
+        // Extract time components using local timezone methods
+        // getHours() and getMinutes() return local time (already converted from UTC)
+        const hours = String(deadline.getHours()).padStart(2, "0");
+        const minutes = String(deadline.getMinutes()).padStart(2, "0");
+        const deadlineTime = `${hours}:${minutes}`;
 
         const reminders: ReminderRule[] = [
           { id: "P3M", label: "3 months before deadline", enabled: false },
