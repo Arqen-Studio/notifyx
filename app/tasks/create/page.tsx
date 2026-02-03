@@ -42,10 +42,29 @@ export default function CreateTaskPage() {
         return;
       }
 
+      // Convert local date/time to UTC for storage
+      // User enters time in their local timezone, we need to convert to UTC
+      let deadlineDateUTC = form.deadlineDate;
+      let deadlineTimeUTC = form.deadlineTime;
+      
+      if (form.deadlineDate && form.deadlineTime) {
+        // Create date object from user's local input
+        const localDate = new Date(`${form.deadlineDate}T${form.deadlineTime}`);
+        // Convert to UTC
+        const utcYear = localDate.getUTCFullYear();
+        const utcMonth = String(localDate.getUTCMonth() + 1).padStart(2, "0");
+        const utcDay = String(localDate.getUTCDate()).padStart(2, "0");
+        const utcHours = String(localDate.getUTCHours()).padStart(2, "0");
+        const utcMinutes = String(localDate.getUTCMinutes()).padStart(2, "0");
+        
+        deadlineDateUTC = `${utcYear}-${utcMonth}-${utcDay}`;
+        deadlineTimeUTC = `${utcHours}:${utcMinutes}`;
+      }
+
       const requestBody: CreateTaskRequest = {
         title: form.title,
-        deadlineDate: form.deadlineDate,
-        deadlineTime: form.deadlineTime || undefined,
+        deadlineDate: deadlineDateUTC,
+        deadlineTime: deadlineTimeUTC || undefined,
         description: form.description || undefined,
         status: form.status,
         tags: form.tags,

@@ -182,11 +182,10 @@ export async function PUT(
     }
 
     if (deadlineDate !== undefined) {
-      // Create date from local date/time string
-      // When no timezone is specified, JavaScript treats it as LOCAL time
-      // Format: "YYYY-MM-DDTHH:mm:ss" (local time, no timezone)
+      // Construct date from user input (date/time without timezone)
+      // Same logic as create - stores time as entered, frontend handles display conversion
       deadlineDateTime = deadlineTime 
-        ? new Date(`${deadlineDate}T${deadlineTime}:00`)
+        ? new Date(`${deadlineDate}T${deadlineTime}`)
         : new Date(`${deadlineDate}T23:59:59`);
       
       if (deadlineDateTime < new Date()) {

@@ -192,12 +192,13 @@ export async function POST(request: NextRequest) {
 
     const { title, deadlineDate, deadlineTime, description, status, tags, reminders } = validationResult.data;
 
-    // Create date from local date/time string
-    // When no timezone is specified, JavaScript treats it as LOCAL time
-    // We need to ensure it's treated as local time, not UTC
-    // Format: "YYYY-MM-DDTHH:mm" (local time, no timezone)
+    // Construct date from user input (date/time without timezone)
+    // The date string "2026-02-10T14:00" is interpreted as LOCAL time by JavaScript
+    // On the server (Vercel runs in UTC), this means 14:00 UTC
+    // This is actually correct for storage - we store the exact time the user entered
+    // The frontend will convert UTC back to local time for display
     const deadlineDateTime = deadlineTime 
-      ? new Date(`${deadlineDate}T${deadlineTime}:00`)
+      ? new Date(`${deadlineDate}T${deadlineTime}`)
       : new Date(`${deadlineDate}T23:59:59`);
 
     if (deadlineDateTime < new Date()) {
