@@ -247,7 +247,7 @@ export default function SignUpPage() {
 
             <Button
               type="button"
-              className="w-full px-10 h-[60px] rounded-full bg-[#F6F6F3] border-[#E6E6E1] text-[25px] text-[#5F6057] flex items-center justify-center gap-2"
+              className="w-full px-10 h-[60px] rounded-full bg-[#F6F6F3] border-[#E6E6E1] text-lg md:text-[25px] text-[#5F6057] flex items-center justify-center gap-2"
             >
               <img
                 src="/svg/google-icon-logo.svg"
