@@ -167,7 +167,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { title, deadlineDate, deadlineTime, description, status, tags, reminders, clientId } = validationResult.data;
+    const { title, deadlineDate, deadlineTime, description, status, tags, reminders } = validationResult.data;
 
     const deadlineDateTime = deadlineTime 
       ? new Date(`${deadlineDate}T${deadlineTime}`)

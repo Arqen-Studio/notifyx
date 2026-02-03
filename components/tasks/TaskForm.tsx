@@ -18,7 +18,6 @@ export interface ReminderRule {
 
 export interface TaskFormData {
   title: string;
-  clientId: string | null;
   deadlineDate: string;
   deadlineTime: string;
   status: TaskStatus;
@@ -62,15 +61,6 @@ export function TaskForm({
               value={form.title}
               onChange={(e) => onFieldChange("title", e.target.value)}
               required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Client / Company</Label>
-            <Input
-              placeholder="Select client..."
-              value={form.clientId ?? ""}
-              onChange={(e) => onFieldChange("clientId", e.target.value)}
             />
           </div>
 

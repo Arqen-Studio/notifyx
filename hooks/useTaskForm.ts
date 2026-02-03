@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { TaskFormData, ReminderRule } from "@/components/tasks";
+import { TaskFormData, ReminderRule } from "@/components/tasks/TaskForm";
 
 const DEFAULT_REMINDERS: ReminderRule[] = [
   { id: "P3M", label: "3 months before deadline", enabled: true },
@@ -14,7 +14,6 @@ const DEFAULT_REMINDERS: ReminderRule[] = [
 export function useTaskForm(initialData?: Partial<TaskFormData>) {
   const [form, setForm] = useState<TaskFormData>({
     title: "",
-    clientId: null,
     deadlineDate: "",
     deadlineTime: "",
     status: "Active",
@@ -43,7 +42,6 @@ export function useTaskForm(initialData?: Partial<TaskFormData>) {
   const resetForm = useCallback((data?: Partial<TaskFormData>) => {
     setForm({
       title: "",
-      clientId: null,
       deadlineDate: "",
       deadlineTime: "",
       status: "Active",

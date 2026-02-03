@@ -59,7 +59,6 @@ export const createTaskSchema = z.object({
     label: z.string(),
     enabled: z.boolean(),
   })).default([]),
-  clientId: z.string().nullable().optional(),
 });
 
 export const updateTaskSchema = z.object({
@@ -84,7 +83,6 @@ export const updateTaskSchema = z.object({
     label: z.string(),
     enabled: z.boolean(),
   })).optional(),
-  clientId: z.string().nullable().optional(),
 });
 
 export type SignupInput = z.infer<typeof signupSchema>;

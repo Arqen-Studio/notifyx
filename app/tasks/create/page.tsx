@@ -4,11 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import Button from "@/components/button";
-import {
-  TaskForm,
-  ErrorAlert,
-  type TaskFormData,
-} from "@/components/tasks";
+import { TaskForm, type TaskFormData } from "@/components/tasks/TaskForm";
+import { ErrorAlert } from "@/components/tasks/ErrorAlert";
 import { useTaskForm } from "@/hooks/useTaskForm";
 import { parseApiError } from "@/lib/api-error-handler";
 import {
@@ -53,7 +50,6 @@ export default function CreateTaskPage() {
         status: form.status,
         tags: form.tags,
         reminders: form.reminders,
-        clientId: form.clientId || undefined,
       };
 
       const response = await fetch("/api/v1/tasks", {

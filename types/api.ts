@@ -64,7 +64,6 @@ export interface CreateTaskRequest {
     label: string;
     enabled: boolean;
   }>;
-  clientId?: string | null;
 }
 
 export interface TaskResponse {

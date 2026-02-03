@@ -3,16 +3,12 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Button from "@/components/button";
-import {
-  TaskForm,
-  TaskDetailsCard,
-  ErrorAlert,
-  type TaskFormData,
-  type ReminderRule,
-} from "@/components/tasks";
+import { TaskForm, type TaskFormData, type ReminderRule } from "@/components/tasks/TaskForm";
+import { TaskDetailsCard } from "@/components/tasks/TaskDetailsCard";
+import { ErrorAlert } from "@/components/tasks/ErrorAlert";
 import { useTaskForm } from "@/hooks/useTaskForm";
 import { parseApiError } from "@/lib/api-error-handler";
-import { LoadingSpinner } from "@/components/common";
+import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { ApiResponse, TaskResponse } from "@/types/api";
 
 export default function EditTaskPage() {
@@ -117,7 +113,6 @@ export default function EditTaskPage() {
 
         setForm({
           title: task.title || "",
-          clientId: null,
           deadlineDate,
           deadlineTime,
           status: task.status === "active" ? "Active" : "Completed",
@@ -174,7 +169,6 @@ export default function EditTaskPage() {
         status: form.status,
         tags: form.tags,
         reminders: form.reminders,
-        clientId: form.clientId || undefined,
       };
 
       const response = await fetch(`/api/v1/tasks/${taskId}`, {

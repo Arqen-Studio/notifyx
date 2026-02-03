@@ -157,7 +157,7 @@ export async function PUT(
       );
     }
 
-    const { title, deadlineDate, deadlineTime, description, status, tags, reminders, clientId } = validationResult.data;
+    const { title, deadlineDate, deadlineTime, description, status, tags, reminders } = validationResult.data;
 
     const updateData: any = {};
 
