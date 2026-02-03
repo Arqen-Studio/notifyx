@@ -4,6 +4,8 @@ import { signupSchema, formatValidationError, createApiError } from "@/lib/valid
 import { ApiResponse, SignupResponse, generateRequestId } from "@/types/api";
 import bcrypt from "bcryptjs";
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     try {

@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { createApiError } from "@/lib/validation";
 import { ApiResponse, generateRequestId } from "@/types/api";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);

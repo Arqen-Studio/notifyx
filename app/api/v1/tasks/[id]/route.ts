@@ -7,6 +7,8 @@ import { ApiResponse, TaskResponse, generateRequestId } from "@/types/api";
 import { rescheduleRemindersForTask, cancelFutureRemindersForTask } from "@/lib/reminders";
 import { prisma as prismaClient } from "@/lib/prisma";
 
+export const dynamic = 'force-dynamic';
+
 const REMINDER_OFFSETS: Record<string, number> = {
   "7d": 7 * 24 * 60 * 60,
   "1d": 1 * 24 * 60 * 60,

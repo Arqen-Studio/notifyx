@@ -4,6 +4,8 @@ import { sendReminderEmail } from "@/lib/email";
 import { createApiError } from "@/lib/validation";
 import { ApiResponse, generateRequestId } from "@/types/api";
 
+export const dynamic = 'force-dynamic';
+
 const INTERVAL_LABELS: Record<string, string> = {
   P3M: "3 months before deadline",
   P1M: "1 month before deadline",

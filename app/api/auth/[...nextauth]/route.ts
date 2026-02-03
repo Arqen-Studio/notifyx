@@ -4,6 +4,8 @@ import GoogleProvider from "next-auth/providers/google";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
+export const dynamic = 'force-dynamic';
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({

@@ -4,6 +4,8 @@ import { ApiResponse, LoginResponse, generateRequestId } from "@/types/api";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
