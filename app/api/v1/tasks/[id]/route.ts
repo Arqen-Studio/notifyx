@@ -6,6 +6,8 @@ import { updateTaskSchema, formatValidationError, createApiError } from "@/lib/v
 import { ApiResponse, TaskResponse, generateRequestId } from "@/types/api";
 import { rescheduleRemindersForTask, cancelFutureRemindersForTask } from "@/lib/reminders";
 
+type PrismaTransaction = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
+
 export const dynamic = 'force-dynamic';
 
 export async function GET(
@@ -78,13 +80,13 @@ export async function GET(
             id: tt.tag.id,
             name: tt.tag.name,
           })),
-          reminder_rules: task.reminder_rules.map((rr) => ({
+          reminder_rules: task.reminder_rules.map((rr: { id: string; label: string | null; offset_seconds: number; enabled: boolean }) => ({
             id: rr.id,
             label: rr.label,
             offset_seconds: rr.offset_seconds,
             enabled: rr.enabled,
           })),
-          reminders: task.reminders ? task.reminders.map((r) => ({
+          reminders: task.reminders ? task.reminders.map((r: { id: string; scheduled_for: Date; status: string; sent_at: Date | null; interval_key: string | null }) => ({
             id: r.id,
             scheduled_for: r.scheduled_for.toISOString(),
             status: r.status,
@@ -159,7 +161,13 @@ export async function PUT(
 
     const { title, deadlineDate, deadlineTime, description, status, tags, reminders } = validationResult.data;
 
-    const updateData: any = {};
+    const updateData: {
+      title?: string;
+      notes?: string | null;
+      status?: string;
+      deadline_at?: Date;
+    } = {};
+    let deadlineDateTime: Date | undefined;
 
     if (title !== undefined) {
       updateData.title = title;
@@ -174,7 +182,7 @@ export async function PUT(
     }
 
     if (deadlineDate !== undefined) {
-      const deadlineDateTime = deadlineTime 
+      deadlineDateTime = deadlineTime 
         ? new Date(`${deadlineDate}T${deadlineTime}`)
         : new Date(`${deadlineDate}T23:59:59`);
       
@@ -191,7 +199,7 @@ export async function PUT(
       updateData.deadline_at = deadlineDateTime;
     }
 
-    const task = await prisma.$transaction(async (tx) => {
+    const task = await prisma.$transaction(async (tx: PrismaTransaction) => {
       const taskBeforeUpdate = await tx.task.findUnique({
         where: { id: taskId },
         select: { deadline_at: true, status: true },
@@ -202,13 +210,13 @@ export async function PUT(
         data: updateData,
       });
 
-      const deadlineChanged = updateData.deadline_at && 
-        taskBeforeUpdate?.deadline_at.getTime() !== updateData.deadline_at.getTime();
+      const deadlineChanged = deadlineDateTime && 
+        taskBeforeUpdate?.deadline_at.getTime() !== deadlineDateTime.getTime();
       
       const statusChanged = updateData.status && 
         taskBeforeUpdate?.status !== updateData.status;
 
-      if (deadlineChanged || (reminders !== undefined && updateData.deadline_at)) {
+      if (deadlineChanged || (reminders !== undefined && deadlineDateTime)) {
         const user = await tx.user.findUnique({
           where: { id: userId },
           select: { enabled_intervals: true },
@@ -236,7 +244,7 @@ export async function PUT(
           tx,
           taskId,
           userId,
-          updateData.deadline_at || updatedTask.deadline_at,
+          deadlineDateTime || updatedTask.deadline_at,
           intervalsToUse
         );
       }
@@ -322,14 +330,14 @@ export async function PUT(
             id: tt.tag.id,
             name: tt.tag.name,
           })),
-          reminder_rules: task.reminder_rules.map((rr) => ({
+          reminder_rules: task.reminder_rules.map((rr: { id: string; label: string | null; offset_seconds: number; enabled: boolean }) => ({
             id: rr.id,
             label: rr.label,
             offset_seconds: rr.offset_seconds,
             enabled: rr.enabled,
           })),
           reminders: task.reminders && Array.isArray(task.reminders)
-            ? task.reminders.map((r) => ({
+            ? task.reminders.map((r: { id: string; scheduled_for: Date; status: string; sent_at: Date | null; interval_key: string | null }) => ({
                 id: r.id,
                 scheduled_for: r.scheduled_for.toISOString(),
                 status: r.status,
@@ -394,7 +402,7 @@ export async function DELETE(
       );
     }
 
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: PrismaTransaction) => {
       await tx.task.update({
         where: { id: taskId },
         data: {

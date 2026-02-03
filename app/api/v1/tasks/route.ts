@@ -6,6 +6,8 @@ import { createTaskSchema, formatValidationError, createApiError } from "@/lib/v
 import { ApiResponse, CreateTaskResponse, TaskResponse, generateRequestId } from "@/types/api";
 import { scheduleRemindersForTask } from "@/lib/reminders";
 
+type PrismaTransaction = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
+
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
@@ -34,7 +36,13 @@ export async function GET(request: NextRequest) {
 
     const includeArchived = searchParams.get("includeArchived") === "true";
     
-    const where: any = {
+    const where: {
+      user_id: string;
+      deleted_at?: Date | null;
+      status?: string;
+      tags?: { some: { tag_id: string } };
+      OR?: Array<{ title?: { contains: string; mode: "insensitive" }; notes?: { contains: string; mode: "insensitive" } }>;
+    } = {
       user_id: userId,
     };
     
@@ -61,11 +69,14 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    const orderBy: any = {};
+    const orderBy: {
+      deadline_at?: "asc" | "desc";
+      created_at?: "asc" | "desc";
+    } = {};
     if (sortBy === "deadline") {
-      orderBy.deadline_at = sortOrder;
+      orderBy.deadline_at = sortOrder as "asc" | "desc";
     } else if (sortBy === "created") {
-      orderBy.created_at = sortOrder;
+      orderBy.created_at = sortOrder as "asc" | "desc";
     } else {
       orderBy.deadline_at = "asc";
     }
@@ -93,7 +104,19 @@ export async function GET(request: NextRequest) {
       take: limit,
     });
 
-    const formattedTasks: TaskResponse[] = tasks.map((task) => ({
+    const formattedTasks: TaskResponse[] = tasks.map((task: {
+      id: string;
+      title: string;
+      notes: string | null;
+      deadline_at: Date;
+      status: string;
+      deleted_at: Date | null;
+      created_at: Date;
+      updated_at: Date;
+      tags: Array<{ tag: { id: string; name: string } }>;
+      reminder_rules: Array<{ id: string; label: string | null; offset_seconds: number; enabled: boolean }>;
+      reminders: Array<{ id: string; scheduled_for: Date; status: string; sent_at: Date | null; interval_key: string | null }>;
+    }) => ({
       id: task.id,
       title: task.title,
       notes: task.notes,
@@ -106,13 +129,13 @@ export async function GET(request: NextRequest) {
         id: tt.tag.id,
         name: tt.tag.name,
       })),
-      reminder_rules: task.reminder_rules.map((rr) => ({
+      reminder_rules: task.reminder_rules.map((rr: { id: string; label: string | null; offset_seconds: number; enabled: boolean }) => ({
         id: rr.id,
         label: rr.label,
         offset_seconds: rr.offset_seconds,
         enabled: rr.enabled,
       })),
-      reminders: task.reminders.map((r) => ({
+      reminders: task.reminders.map((r: { id: string; scheduled_for: Date; status: string; sent_at: Date | null; interval_key: string | null }) => ({
         id: r.id,
         scheduled_for: r.scheduled_for.toISOString(),
         status: r.status,
@@ -206,7 +229,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const task = await prisma.$transaction(async (tx) => {
+    const task = await prisma.$transaction(async (tx: PrismaTransaction) => {
       const newTask = await tx.task.create({
         data: {
           user_id: userId,
@@ -285,11 +308,11 @@ export async function POST(request: NextRequest) {
           deleted_at: task.deleted_at?.toISOString() || null,
           created_at: task.created_at.toISOString(),
           updated_at: task.updated_at.toISOString(),
-          tags: task.tags.map((tt) => ({
+          tags: task.tags.map((tt: { tag: { id: string; name: string } }) => ({
             id: tt.tag.id,
             name: tt.tag.name,
           })),
-          reminder_rules: task.reminder_rules.map((rr) => ({
+          reminder_rules: task.reminder_rules.map((rr: { id: string; label: string | null; offset_seconds: number; enabled: boolean }) => ({
             id: rr.id,
             label: rr.label,
             offset_seconds: rr.offset_seconds,
