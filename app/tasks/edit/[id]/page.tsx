@@ -75,7 +75,6 @@ export default function EditTaskPage() {
 
         const deadline = new Date(task.deadline_at);
         
-        // Use local date methods to avoid timezone issues
         const year = deadline.getFullYear();
         const month = String(deadline.getMonth() + 1).padStart(2, "0");
         const day = String(deadline.getDate()).padStart(2, "0");
@@ -85,7 +84,6 @@ export default function EditTaskPage() {
         const minutes = String(deadline.getMinutes()).padStart(2, "0");
         const deadlineTime = `${hours}:${minutes}`;
 
-        // Initialize all available reminder intervals
         const reminders: ReminderRule[] = [
           { id: "P3M", label: "3 months before deadline", enabled: false },
           { id: "P1M", label: "1 month before deadline", enabled: false },
@@ -96,7 +94,6 @@ export default function EditTaskPage() {
           { id: "P1D", label: "1 day before deadline", enabled: false },
         ];
 
-        // Map existing reminders based on interval_key from reminders
         if (task.reminders && Array.isArray(task.reminders)) {
           const enabledIntervals = new Set(
             task.reminders

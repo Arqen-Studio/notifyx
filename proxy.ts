@@ -9,7 +9,6 @@ export default withAuth(
   {
     callbacks: {
       authorized: ({ token, req }) => {
-        // Allow NextAuth API routes to pass through without authentication
         if (req.nextUrl.pathname.startsWith("/api/auth")) {
           return true;
         }

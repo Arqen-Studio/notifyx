@@ -22,7 +22,6 @@ async function fetchDashboardStats(tasks: TaskResponse[]): Promise<DashboardStat
   const now = new Date();
   const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-  // Filter out archived tasks for these calculations
   const nonArchivedTasks = tasks.filter((task) => task.deleted_at === null);
 
   const upcomingTasks = nonArchivedTasks.filter((task) => {
@@ -85,12 +84,10 @@ export function useDashboard() {
 
     const tasksRes = await fetchTasks(queryParams.toString());
     
-    // Fetch ALL tasks (including archived) for accurate stats calculation
     const allTasksParams = new URLSearchParams();
     allTasksParams.set("includeArchived", "true");
     const allTasksRes = await fetchTasks(allTasksParams.toString());
     
-    // Calculate stats from all tasks (including archived for accurate counts)
     const statsRes = await fetchDashboardStats(allTasksRes);
 
     const uniqueTags = new Map<string, { id: string; name: string }>();

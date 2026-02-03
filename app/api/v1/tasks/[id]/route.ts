@@ -219,11 +219,9 @@ export async function PUT(
         const reminderIntervals = reminders
           ?.filter((r) => r.enabled)
           .map((r): "P3M" | "P1M" | "P3W" | "P2W" | "P1W" | "P3D" | "P1D" | null => {
-            // Map to ISO 8601 duration format
             if (r.id === "P3M" || r.id === "P1M" || r.id === "P3W" || r.id === "P2W" || r.id === "P1W" || r.id === "P3D" || r.id === "P1D") {
               return r.id as "P3M" | "P1M" | "P3W" | "P2W" | "P1W" | "P3D" | "P1D";
             }
-            // Legacy support for old IDs
             if (r.id === "7d") return "P1W";
             if (r.id === "1d") return "P1D";
             return null;
