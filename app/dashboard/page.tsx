@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { Bell, Clock, FileText, Plus } from "lucide-react";
 import Button from "@/components/button";
 import { useRouter } from "next/navigation";
@@ -11,7 +12,7 @@ import { TaskTable } from "@/components/dashboard/TaskTable";
 import { TaskCard } from "@/components/dashboard/TaskCard";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 
-export default function DashboardPage() {
+function DashboardContent() {
   const router = useRouter();
   const {
     stats,
@@ -83,5 +84,13 @@ export default function DashboardPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<LoadingSpinner message="Loading dashboard..." fullScreen />}>
+      <DashboardContent />
+    </Suspense>
   );
 }
