@@ -67,11 +67,8 @@ export function ActionMenu({ items, ariaLabel = "Actions" }: ActionMenuProps) {
       {open && (
         <div
           ref={menuRef}
-          className={`absolute bg-white border border-gray-200 rounded-lg shadow-lg flex flex-col z-50 right-0 bottom-full mb-1 ${
-            items.some((item) => item.label) 
-              ? "min-w-[140px] py-1" 
-              : "w-auto py-1"
-          }`}
+          className={`absolute  bg-white border border-gray-200 rounded-lg shadow-lg flex z-50 right-full top-0
+ ${items.some((item) => item.label) ? "min-w-[140px] py-1" : "w-auto py-1"}`}
           onClick={(e) => e.stopPropagation()}
         >
           {items.map((item, index) => (
@@ -96,7 +93,9 @@ export function ActionMenu({ items, ariaLabel = "Actions" }: ActionMenuProps) {
                 e.stopPropagation();
               }}
               type="button"
-              aria-label={item.label || (item.variant === "danger" ? "Delete" : "Edit")}
+              aria-label={
+                item.label || (item.variant === "danger" ? "Delete" : "Edit")
+              }
             >
               {item.icon}
               {item.label && <span>{item.label}</span>}
