@@ -82,8 +82,7 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
     async jwt({ token, user, account }) {
-      // For Google OAuth, user.id is not our database ID
-      // We need to fetch the database user ID based on email
+   
       if (user && account?.provider === "google" && user.email) {
         try {
           const dbUser = await prisma.user.findUnique({
@@ -94,11 +93,9 @@ export const authOptions: NextAuthOptions = {
             token.sub = dbUser.id;
           }
         } catch (error) {
-          // If user lookup fails, keep the existing token.sub
           console.error("Error fetching user ID for Google OAuth:", error);
         }
       } else if (user) {
-        // For credentials provider, user.id is already the database ID
         token.sub = user.id;
       }
       return token;

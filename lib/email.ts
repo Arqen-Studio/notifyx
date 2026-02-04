@@ -15,7 +15,7 @@ export async function sendReminderEmail(
 
   const tagsStr = tags.length > 0 ? tags.map((t) => t.name).join(", ") : "None";
 
-  const subject = `Reminder: ${taskTitle} - ${intervalLabel}`;
+  const subject = `Task Reminder: ${taskTitle} - ${intervalLabel}`;
 
   const htmlBody = `
     <!DOCTYPE html>
@@ -37,7 +37,7 @@ export async function sendReminderEmail(
     <body>
       <div class="container">
         <div class="header">
-          <h1>Task Reminder</h1>
+          <h1>Notifyx Task Reminder</h1>
         </div>
         <div class="content">
           <div class="task-title">${taskTitle}</div>

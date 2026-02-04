@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Bell } from "lucide-react";
 import { TaskResponse } from "@/types/api";
 import { TaskActionMenu } from "./TaskActionMenu";
+import { getTagColors } from "@/lib/tagColors";
 
 interface TaskTableProps {
   tasks: TaskResponse[];
@@ -21,7 +22,8 @@ export function TaskTable({ tasks, onDelete, onEdit }: TaskTableProps) {
               <tr>
                 <th className="p-4">Task</th>
                 <th className="p-4">Deadline</th>
-                <th className="p-4">Tags</th>
+                <th className="p-4">Reminders</th>
+                <th className="p-4 text-center">Tags</th>
                 <th className="p-4">Status</th>
                 <th className="p-4 text-right">Actions</th>
               </tr>
@@ -61,30 +63,44 @@ function TaskTableRow({
       <td className="p-4">
         <div className="space-y-1">
           <div>{new Date(task.deadline_at).toLocaleDateString()}</div>
-          {task.reminders && task.reminders.length > 0 && (
-            <div className="flex items-center gap-1 text-xs text-slate-500">
-              <Bell className="w-3 h-3" />
-              <span>
-                {sentCount} sent, {pendingCount} pending
-              </span>
-            </div>
-          )}
+          <div className="text-xs text-slate-500">
+            {new Date(task.deadline_at).toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </div>
         </div>
       </td>
       <td className="p-4">
-        {task.tags.length > 0 ? (
-          <div className="flex flex-wrap gap-1">
-            {task.tags.map((tag) => (
-              <span
-                key={tag.id}
-                className="px-2 py-1 text-xs rounded-full bg-slate-100 text-slate-700"
-              >
-                {tag.name}
-              </span>
-            ))}
+        {task.reminders && task.reminders.length > 0 ? (
+          <div className="flex items-center gap-1 text-xs text-slate-600">
+            <Bell className="w-3 h-3" />
+            <span>
+              {sentCount} sent, {pendingCount} pending
+            </span>
           </div>
         ) : (
           <span className="text-slate-400">—</span>
+        )}
+      </td>
+      <td className="p-4">
+        {task.tags.length > 0 ? (
+          <div className="grid grid-cols-2 gap-1 max-w-[200px] mx-auto">
+            {task.tags.map((tag) => {
+              const tagColorClasses = getTagColors(tag.name);
+              return (
+                <span
+                  key={tag.id}
+                  className={`px-2 py-1 text-xs rounded-full border truncate text-center ${tagColorClasses}`}
+                  title={tag.name}
+                >
+                  {tag.name}
+                </span>
+              );
+            })}
+          </div>
+        ) : (
+          <span className="text-slate-400 text-center block">—</span>
         )}
       </td>
       <td className="p-4">

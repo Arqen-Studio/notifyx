@@ -182,13 +182,13 @@ export async function PUT(
     }
 
     if (deadlineDate !== undefined) {
-      // Construct date from user input (date/time without timezone)
-      // Same logic as create - stores time as entered, frontend handles display conversion
+     
       deadlineDateTime = deadlineTime 
-        ? new Date(`${deadlineDate}T${deadlineTime}`)
-        : new Date(`${deadlineDate}T23:59:59`);
+        ? new Date(`${deadlineDate}T${deadlineTime}:00Z`)
+        : new Date(`${deadlineDate}T23:59:59Z`);
       
-      if (deadlineDateTime < new Date()) {
+      const now = new Date();
+      if (deadlineDateTime <= now) {
         return NextResponse.json(
           createApiError(
             "VALIDATION_ERROR",

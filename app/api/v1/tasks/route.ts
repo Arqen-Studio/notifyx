@@ -192,16 +192,13 @@ export async function POST(request: NextRequest) {
 
     const { title, deadlineDate, deadlineTime, description, status, tags, reminders } = validationResult.data;
 
-    // Construct date from user input (date/time without timezone)
-    // The date string "2026-02-10T14:00" is interpreted as LOCAL time by JavaScript
-    // On the server (Vercel runs in UTC), this means 14:00 UTC
-    // This is actually correct for storage - we store the exact time the user entered
-    // The frontend will convert UTC back to local time for display
+    
     const deadlineDateTime = deadlineTime 
-      ? new Date(`${deadlineDate}T${deadlineTime}`)
-      : new Date(`${deadlineDate}T23:59:59`);
+      ? new Date(`${deadlineDate}T${deadlineTime}:00Z`)
+      : new Date(`${deadlineDate}T23:59:59Z`);
 
-    if (deadlineDateTime < new Date()) {
+    const now = new Date();
+    if (deadlineDateTime <= now) {
       return NextResponse.json(
         createApiError(
           "VALIDATION_ERROR",

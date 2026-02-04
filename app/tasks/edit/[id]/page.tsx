@@ -73,17 +73,13 @@ export default function EditTaskPage() {
         const task = data.data.task;
         setTaskDetails(task);
 
-        // Parse the ISO date string from database (stored in UTC)
-        // new Date() automatically converts UTC ISO string to browser's local timezone
         const deadline = new Date(task.deadline_at);
-        
-        // Extract local date components (already converted from UTC to local by new Date())
+
         const year = deadline.getFullYear();
         const month = String(deadline.getMonth() + 1).padStart(2, "0");
         const day = String(deadline.getDate()).padStart(2, "0");
         const deadlineDate = `${year}-${month}-${day}`;
         
-        // Extract local time components (already converted from UTC to local by new Date())
         const hours = String(deadline.getHours()).padStart(2, "0");
         const minutes = String(deadline.getMinutes()).padStart(2, "0");
         const deadlineTime = `${hours}:${minutes}`;
@@ -104,7 +100,7 @@ export default function EditTaskPage() {
               .filter((r) => r.status === "pending" && r.interval_key)
               .map((r) => r.interval_key)
           );
-          
+
           reminders.forEach((reminder) => {
             if (enabledIntervals.has(reminder.id)) {
               reminder.enabled = true;
@@ -162,15 +158,12 @@ export default function EditTaskPage() {
         return;
       }
 
-      // Convert local date/time to UTC for storage
-      // User enters time in their local timezone, we need to convert to UTC
+
       let deadlineDateUTC = form.deadlineDate;
       let deadlineTimeUTC = form.deadlineTime;
-      
+
       if (form.deadlineDate && form.deadlineTime) {
-        // Create date object from user's local input
         const localDate = new Date(`${form.deadlineDate}T${form.deadlineTime}`);
-        // Convert to UTC
         const utcYear = localDate.getUTCFullYear();
         const utcMonth = String(localDate.getUTCMonth() + 1).padStart(2, "0");
         const utcDay = String(localDate.getUTCDate()).padStart(2, "0");

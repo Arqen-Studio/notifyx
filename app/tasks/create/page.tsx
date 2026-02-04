@@ -42,15 +42,10 @@ export default function CreateTaskPage() {
         return;
       }
 
-      // Convert local date/time to UTC for storage
-      // User enters time in their local timezone, we need to convert to UTC
       let deadlineDateUTC = form.deadlineDate;
       let deadlineTimeUTC = form.deadlineTime;
-      
       if (form.deadlineDate && form.deadlineTime) {
-        // Create date object from user's local input
         const localDate = new Date(`${form.deadlineDate}T${form.deadlineTime}`);
-        // Convert to UTC
         const utcYear = localDate.getUTCFullYear();
         const utcMonth = String(localDate.getUTCMonth() + 1).padStart(2, "0");
         const utcDay = String(localDate.getUTCDate()).padStart(2, "0");
@@ -86,9 +81,8 @@ export default function CreateTaskPage() {
         return;
       }
 
-      const data = await response.json();
-      const successData = data as ApiResponse<CreateTaskResponse>;
-      
+      await response.json();
+
       router.push("/dashboard?refresh=true");
     } catch (err) {
       setError(

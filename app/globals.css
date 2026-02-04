@@ -51,6 +51,7 @@
 
 body {
   font-family: var(--font-archivo);
+  font-weight: 500;
   color: #171717;
   background-color: #f1e9e9;
 }
@@ -184,6 +185,6 @@ body {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-medium;
   }
 }

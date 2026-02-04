@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Clock, Bell } from "lucide-react";
 import { TaskResponse } from "@/types/api";
 import { TaskActionMenu } from "./TaskActionMenu";
+import { getTagColors } from "@/lib/tagColors";
 
 interface TaskCardProps {
   task: TaskResponse;
@@ -30,13 +31,21 @@ export function TaskCard({ task, onDelete, onEdit }: TaskCardProps) {
         <div className="space-y-2 text-sm">
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4 text-slate-400" />
-            <span className="text-slate-600">
-              {new Date(task.deadline_at).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              })}
-            </span>
+            <div className="flex flex-col">
+              <span className="text-slate-600">
+                {new Date(task.deadline_at).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+              </span>
+              <span className="text-xs text-slate-500">
+                {new Date(task.deadline_at).toLocaleTimeString("en-US", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </span>
+            </div>
           </div>
 
           {task.reminders && task.reminders.length > 0 && (
@@ -49,15 +58,22 @@ export function TaskCard({ task, onDelete, onEdit }: TaskCardProps) {
           )}
 
           {task.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-2">
-              {task.tags.map((tag) => (
-                <span
-                  key={tag.id}
-                  className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700"
-                >
-                  {tag.name}
-                </span>
-              ))}
+            <div className="space-y-2 mt-2">
+              <div className="text-xs text-slate-500 font-normal text-center">Tags</div>
+              <div className="grid grid-cols-2 gap-1">
+                {task.tags.map((tag) => {
+                  const tagColorClasses = getTagColors(tag.name);
+                  return (
+                    <span
+                      key={tag.id}
+                      className={`px-2 py-1 text-xs rounded-full border truncate text-center ${tagColorClasses}`}
+                      title={tag.name}
+                    >
+                      {tag.name}
+                    </span>
+                  );
+                })}
+              </div>
             </div>
           )}
 

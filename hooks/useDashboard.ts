@@ -33,12 +33,23 @@ async function fetchDashboardStats(tasks: TaskResponse[]): Promise<DashboardStat
   const completedTasks = nonArchivedTasks.filter((task) => task.status === "completed");
   const archivedTasks = tasks.filter((task) => task.deleted_at !== null);
 
+  let remindersSentToday = 0;
+  try {
+    const remindersResponse = await fetch("/api/v1/reminders/sent-today");
+    if (remindersResponse.ok) {
+      const remindersData = (await remindersResponse.json()) as ApiResponse<{ count: number }>;
+      remindersSentToday = remindersData.data.count;
+    }
+  } catch (error) {
+    console.error("Failed to fetch reminders sent today:", error);
+  }
+
   return {
     upcomingCount: upcomingTasks.length,
     activeCount: activeTasks.length,
     completedCount: completedTasks.length,
     archivedCount: archivedTasks.length,
-    remindersSentToday: 0,
+    remindersSentToday,
   };
 }
 

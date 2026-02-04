@@ -3,6 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Calendar, Clock, Bell, CheckCircle, XCircle } from "lucide-react";
 import { TaskResponse } from "@/types/api";
+import { getTagColors } from "@/lib/tagColors";
 
 interface TaskDetailsCardProps {
   task: TaskResponse;
@@ -76,14 +77,17 @@ export function TaskDetailsCard({ task }: TaskDetailsCardProps) {
           <div className="mt-4 pt-4 border-t">
             <p className="text-sm text-gray-500 mb-2">Tags</p>
             <div className="flex flex-wrap gap-2">
-              {task.tags.map((tag) => (
-                <span
-                  key={tag.id}
-                  className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700"
-                >
-                  {tag.name}
-                </span>
-              ))}
+              {task.tags.map((tag) => {
+                const tagColorClasses = getTagColors(tag.name);
+                return (
+                  <span
+                    key={tag.id}
+                    className={`px-2 py-1 text-xs rounded-full border ${tagColorClasses}`}
+                  >
+                    {tag.name}
+                  </span>
+                );
+              })}
             </div>
           </div>
         )}

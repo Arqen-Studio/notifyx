@@ -23,12 +23,10 @@ export function TaskActionMenu({ taskId, onDelete, onEdit }: TaskActionMenuProps
 
   const menuItems: ActionMenuItem[] = [
     {
-      label: "Edit Task",
       icon: <Edit size={16} className="text-blue-500" />,
       onClick: handleEdit,
     },
     {
-      label: "Delete Task",
       icon: <Trash2 size={16} />,
       onClick: onDelete,
       variant: "danger",
